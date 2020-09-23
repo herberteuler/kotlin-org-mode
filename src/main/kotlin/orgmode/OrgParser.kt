@@ -12,8 +12,6 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
     
     fun parseSection(root: Org): Org? {
 
-	// return Document(arrayOf(Text("Test\n"), Header("Test header", 1, arrayOf(Text("In header")))))
-
 	var lines: Array<Org> = emptyArray()
 	val level: Int = if (root is Document) 0 else (root as Section).level
 	
@@ -25,13 +23,12 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		root.add(Paragraph(level, lines))
 		lines = emptyArray()
 		if(root is Document || element.level > (root as Section).level) {
-		    // root.add(parseSection(element))
 		    var section = parseSection(element)
 		    while(true) {
 			root.add(element)
 			
 			if(section != null && section is Section) {
-			    if(section.level <= (root as Section).level) {
+			    if(root is Section && section.level <= root.level) {
 				return section
 			    } else {
 				element = section

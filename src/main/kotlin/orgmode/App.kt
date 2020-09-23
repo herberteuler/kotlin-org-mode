@@ -6,45 +6,12 @@ package orgmode
 fun main(args: Array<String>) {
 
     val org: Org = OrgParser(StringSource("""
-* Other
-** Manga
-*** OnePunchMan
-
-- 176
-- [[https://mangalib.me/onepunchman][Link]]
-
-*** Kaguya-sama
-
-- 198
-- [[https://guya.moe/read/manga/Kaguya-Wants-To-Be-Confessed-To/][Read]]
-
-*** One piece
-
-- 990
-- [[https://mangalib.me/one-piece][Read]]
-
-*** Башня бога
-
-- 2
-- 221
-- [[https://mangalib.me/tower-of-god][Link]]
-
-*** Берсерк
-
-- 361
-- [[https://risens.team/title/28/berserk-manga][Link]]
-
-** Media
-*** Funny
-
-- [[https://www.youtube.com/watch?v=NVuTBL09Dn4][Java commercial]]
-
-*** Video
-**** Hollow knight
-
-- lore [[https://www.youtube.com/watch?v=0XDiWYFGGqY][Youtube]]
-- 100% steel soul tips [[https://www.youtube.com/watch?v=_z5lGY9q8zI][Youtube]]
-
+* 1
+** 2
+** 3
+*** 4
+* 5
+** 6
 				  """)).parse()
 
     println(org.toString())
