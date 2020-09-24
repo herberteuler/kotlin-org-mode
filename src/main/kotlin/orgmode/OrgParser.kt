@@ -5,35 +5,33 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
 
     override fun parse(): Org {
-	var root: Org = Document()
+	var root: Section = Document()
 	parseSection(root)
 	return root
     }
     
-    fun parseSection(root: Org): Org? {
+    fun parseSection(root: Section): Section? {
 
 	var lines: Array<Org> = emptyArray()
-	val level: Int = if (root is Document) 0 else (root as Section).level
 	
 	while(!src.isEof()) {
 
 	    var element = parseLine()
 
 	    if(element is Section) {
-		if (!lines.isEmpty()) root.add(Paragraph(level, lines))
-		if(root is Document || element.level > (root as Section).level) {
-		    var section = parseSection(element)
+		if (!lines.isEmpty()) root.add(Paragraph(root.level, lines))
+
+		if(element.level > root.level) {
+		    var section: Section? = parseSection(element)
 		    while(true) {
 			root.add(element)
 			
-			if(section != null && section is Section) {
-			    if(root is Section && section.level <= root.level) {
-				return section
-			    } else {
-				element = section
-				section = parseSection(element)
-			    }
-			} else return null
+			if(section == null || section.level <= root.level) {
+			    return section
+			}
+			
+			element = section
+			section = parseSection(element)
 		    }
 		} else return element
 	    } else {
@@ -41,7 +39,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    }
 	    
 	}
-	if(!lines.isEmpty()) root.add(Paragraph(level, lines))
+	if(!lines.isEmpty()) root.add(Paragraph(root.level, lines))
 	return null
 
     }

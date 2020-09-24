@@ -88,7 +88,7 @@ open class Text(text: String) : Org() {
 
 }
 
-class Section(text: String, level: Int, entities: Array<Org> = emptyArray()) : Org(entities) {
+open class Section(text: String, level: Int, entities: Array<Org> = emptyArray()) : Org(entities) {
 
     var level: Int = level
 
@@ -126,7 +126,12 @@ class Section(text: String, level: Int, entities: Array<Org> = emptyArray()) : O
     
 }
 
-class Document(entities: Array<Org> = emptyArray()) : Org(entities) {
+class Document(entities: Array<Org> = emptyArray()) : Section("", 0, entities) {
+
+    override fun toString(): String {
+	return (this as Org).toString()
+    }
+    
     override fun toJson(): String {
 	var elements: String = ""
 

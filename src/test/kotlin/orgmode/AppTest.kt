@@ -53,6 +53,7 @@ class AppTest {
 Text 1
 ** Test 2
 Text 2
+Text 3
 * Test 3
 """)).parse()
 
@@ -64,7 +65,8 @@ Text 2
 			    )),
 			    Section("Test 2", 2, arrayOf(
 					Paragraph(2, arrayOf(
-						      Text("Text 2")
+						      Text("Text 2"),
+						      Text("Text 3")
 					))
 			    ))
 		)),
