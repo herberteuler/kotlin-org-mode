@@ -2,7 +2,7 @@
 
 [[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]]
 
-Trying kotlin \
+Trying kotlin \\
 Tool for org-mode
 
 ** Parser [1/3]
