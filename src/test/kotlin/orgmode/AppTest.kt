@@ -17,7 +17,7 @@ class AppTest {
 	val org: Org = OrgParser(StringSource("""Test
 """)).parse()
 
-	val res: Org = Document(arrayOf(Paragraph(arrayOf(Text("Test")))))
+	val res: Org = Document(listOf(Paragraph(listOf(Text("Test")))))
 	
 	println(org.toJson())
 	println(res.toJson())
@@ -33,11 +33,11 @@ class AppTest {
 """)).parse()
 
 	val res: Org = Document(
-	    arrayOf(
-		Section("Test1", 1, arrayOf(
-			    Section("Test 2", 2, emptyArray())
+	    listOf(
+		Section("Test1", 1, listOf(
+			    Section("Test 2", 2, emptyList())
 		)),
-		Section("Test 3", 1, emptyArray())
+		Section("Test 3", 1, emptyList())
 	    )
 	)
 	
@@ -58,19 +58,19 @@ Text 3
 """)).parse()
 
 	val res: Org = Document(
-	    arrayOf(
-		Section("Test1", 1, arrayOf(
-			    Paragraph(arrayOf(
+	    listOf(
+		Section("Test1", 1, listOf(
+			    Paragraph(listOf(
 					  Text("Text 1")
 			    )),
-			    Section("Test 2", 2, arrayOf(
-					Paragraph(arrayOf(
+			    Section("Test 2", 2, listOf(
+					Paragraph(listOf(
 						      Text("Text 2"),
 						      Text("Text 3")
 					))
 			    ))
 		)),
-		Section("Test 3", 1, emptyArray())
+		Section("Test 3", 1, emptyList())
 	    )
 	)
 	
