@@ -20,8 +20,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    var element = parseLine()
 
 	    if(element is Section) {
-		root.add(Paragraph(level, lines))
-		lines = emptyArray()
+		if (!lines.isEmpty()) root.add(Paragraph(level, lines))
 		if(root is Document || element.level > (root as Section).level) {
 		    var section = parseSection(element)
 		    while(true) {

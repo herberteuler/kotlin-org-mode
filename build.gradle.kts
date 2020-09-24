@@ -36,3 +36,9 @@ application {
     // Define the main class for the application.
     mainClassName = "orgmode.AppKt"
 }
+
+tasks.withType<Test> {
+    this.testLogging {
+	this.showStandardStreams = true
+    }
+}
