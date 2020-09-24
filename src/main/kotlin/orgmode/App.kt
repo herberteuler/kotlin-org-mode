@@ -7,18 +7,23 @@ fun main(args: Array<String>) {
 
     val org: Org = OrgParser(StringSource("""
 * 1
-Test 1
-** 2
-Test 2
-** 3
-Test 3
-*** 4
-Test 4
 * 5
+- List
+  123
+1. Also list
+
+
+
+
+
+
+   abs
+2.Not list
 Test 5
 ** 6
 Test 5""")).parse()
 
     println(org.toString())
     println(org.toJson())
+    println(org.toHtml())
 }

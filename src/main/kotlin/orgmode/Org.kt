@@ -1,20 +1,12 @@
 
 package orgmode
 
-abstract class Org(entities: Array<Org> = emptyArray()) {
+abstract class Org(entities: List<Org> = emptyList()) {
 
-    var entities: Array<Org> = entities
+    var entities: List<Org> = entities
 	get
 
-    override fun toString(): String {
-	var res: String = ""
-
-	for(e in entities) {
-	    res += e.toString();
-	}
-
-	return res
-    }
+    override fun toString(): String = entities.fold("") {acc, e -> acc + e.toString()}
 
     fun add(element: Org): Unit {
 	entities += element
@@ -31,20 +23,16 @@ abstract class Org(entities: Array<Org> = emptyArray()) {
     }
     
     abstract fun toJson(): String
+    open fun toHtml(): String = entities.fold("") {acc, e -> acc + e.toHtml()}
     
 }
 
-class Paragraph(level: Int, entities: Array<Org> = emptyArray()) : Org(entities) {
+class Paragraph(entities: List<Org> = emptyList()) : Org(entities) {
 
-    val level: Int = level
-    
     override fun toString(): String {
 	var res: String = ""
 
 	for(e in entities) {
-
-	    for(i in 1..level) res += "  "
-	    
 	    res += e.toString() + '\n'
 	}
 
@@ -62,13 +50,18 @@ class Paragraph(level: Int, entities: Array<Org> = emptyArray()) : Org(entities)
 	    lines += "\"" + entities[i].toJson() + "\""
 	}
 
-	return "\"paragraph\": { \"level\": $level, \"lines\": [$lines] }"
+	return "\"paragraph\": { \"lines\": [$lines] }"
 						 
     }
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Paragraph) return false
-	return other.level == level && super.equals(other)
+	return super.equals(other)
+    }
+
+    override fun toHtml(): String {
+	var innerHtml: String = super.toHtml()
+	return "<p>$innerHtml</p>"
     }
 
 }
@@ -80,6 +73,7 @@ open class Text(text: String) : Org() {
 
     override fun toString(): String = text
     override fun toJson(): String = text
+    override fun toHtml(): String = text
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Text) return false
@@ -88,7 +82,7 @@ open class Text(text: String) : Org() {
 
 }
 
-open class Section(text: String, level: Int, entities: Array<Org> = emptyArray()) : Org(entities) {
+open class Section(text: String, level: Int, entities: List<Org> = emptyList()) : Org(entities) {
 
     var level: Int = level
 
@@ -96,10 +90,6 @@ open class Section(text: String, level: Int, entities: Array<Org> = emptyArray()
 
     override fun toString(): String {
 	var prefix: String = "\n"
-
-	for(i in 1..level-1) {
-	    prefix += "  "
-	}
 
 	for(i in 1..level) {
 	    prefix += '*'
@@ -119,6 +109,11 @@ open class Section(text: String, level: Int, entities: Array<Org> = emptyArray()
 	return "\"section\": { \"header\": \"$text\", \"level\": $level, \"elements\": [$elements] }"
     }
 
+    override fun toHtml(): String {
+	var innerHtml: String = super.toHtml()
+	return "<h$level>$text</h$level>$innerHtml"
+    }
+
     override fun equals(other: Any?): Boolean {
 	if(other !is Section) return false
 	return other.text == text && other.level == level && super.equals(other)
@@ -126,10 +121,11 @@ open class Section(text: String, level: Int, entities: Array<Org> = emptyArray()
     
 }
 
-class Document(entities: Array<Org> = emptyArray()) : Section("", 0, entities) {
+class Document(entities: List<Org> = emptyList()) : Section("", 0, entities) {
 
     override fun toString(): String {
-	return (this as Org).toString()
+	// return (this as Org).toString() FIXME
+	return entities.fold("") {acc, e -> acc + e.toString()}
     }
     
     override fun toJson(): String {
@@ -143,8 +139,38 @@ class Document(entities: Array<Org> = emptyArray()) : Section("", 0, entities) {
 	return "{ \"document\": { \"elements\": [$elements] } }"
     }
 
+    override fun toHtml(): String {
+	// val innerHtml: String = super.toHtml() FIXME
+	var innerHtml: String = entities.fold("") {acc, e -> acc + e.toHtml()}
+	return "<html><head></head><body>$innerHtml</body></html>"
+    }
+
     override fun equals(other: Any?): Boolean {
 	if(other !is Document) return false
 	return super.equals(other)
     }
+}
+
+class OrgList(entries: List<ListEntry>): Org(emptyList()) {
+
+    var entries: List<ListEntry> = entries
+
+    fun add(entry: ListEntry) { entries += entry }
+    
+    override fun toJson(): String = "NOT IMPLEMENTED"
+    override fun toHtml(): String = "NOT IMPLEMENTED"
+    override fun toString(): String {
+	return entries.fold("") {acc, e -> acc + e.toString()}
+    }
+}
+
+class ListEntry(val indent: Int, val bullet: String, val text:String, entities: List<Org> = emptyList()): Org(entities) {
+    
+    override fun toJson(): String = "NOT IMPLEMENTED"
+    override fun toHtml(): String = "NOT IMPLEMENTED"
+    override fun toString(): String {
+	var prefix: String = " ".repeat(indent)
+	return "$prefix$bullet $text\n" + entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
+    }
+    
 }

@@ -18,6 +18,24 @@ abstract class AbstractParser<T>(src: Source) : Parser<T> {
 	}
     }
 
+    public fun testRange(range: CharRange): Boolean {
+	for(c in range) {
+	    if(test(c)) return true
+	}
+	return false
+    }
+
+    public fun skipWhitespaces(): Int {
+	var i: Int = 0
+	
+	while(src.getChar().isWhitespace()) {
+	    i++
+	    src.nextChar()
+	}
+
+	return i
+    }
+
     public fun expect(c: Char): Unit {
 	if(!test(c)) throw ParserException("Expected " + c + ", but " + src.getChar() + " met")
     }

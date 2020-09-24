@@ -17,7 +17,7 @@ class AppTest {
 	val org: Org = OrgParser(StringSource("""Test
 """)).parse()
 
-	val res: Org = Document(arrayOf(Paragraph(0, arrayOf(Text("Test")))))
+	val res: Org = Document(arrayOf(Paragraph(arrayOf(Text("Test")))))
 	
 	println(org.toJson())
 	println(res.toJson())
@@ -60,11 +60,11 @@ Text 3
 	val res: Org = Document(
 	    arrayOf(
 		Section("Test1", 1, arrayOf(
-			    Paragraph(1, arrayOf(
+			    Paragraph(arrayOf(
 					  Text("Text 1")
 			    )),
 			    Section("Test 2", 2, arrayOf(
-					Paragraph(2, arrayOf(
+					Paragraph(arrayOf(
 						      Text("Text 2"),
 						      Text("Text 3")
 					))
