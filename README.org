@@ -1,5 +1,8 @@
 * Kotlin org mode
-Trying kotlin
+
+[[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]]
+
+Trying kotlin \
 Tool for org-mode
 
 ** Parser [1/3]
