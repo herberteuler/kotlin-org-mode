@@ -42,10 +42,19 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    }
 		} else return element
 	    } else if(element is ListEntry) {
+		if(!lines.isEmpty()) {
+		    root.add(Paragraph(lines))
+		    lines = emptyList()
+		}
 		var (newElement, _, list)  = parseList(element)
-		lines += list
+		root.add(list)
 		skip = true
 		element = newElement
+	    } else if(element is Text && element.isEmptyLine()) {
+		if(!lines.isEmpty()) {
+		    root.add(Paragraph(lines))
+		    lines = emptyList()
+		}
 	    } else {
 		lines += element
 	    }
@@ -75,6 +84,14 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	var buf: String = ""
 
 	while(!test('\n') && !src.isEof()) {
+	    if(test('\\'))  {
+		if(test('\\')) {
+		    if(test('\n')) {
+			buf += '\n'
+			break;
+		    } else buf += '\\'
+		}
+	    }
 	    buf += src.getChar()
 	    src.nextChar()
 	}
@@ -114,7 +131,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    return Text(bullet + parseRawLine()) // FIXME: return formated text
 	}
 
-	return ListEntry(indent, bullet, parseRawLine())
+	return ListEntry(parseRawLine(), bullet, indent)
 
     }
 
@@ -126,27 +143,36 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	var entry: ListEntry = entryVal
 	var list: OrgList = OrgList(emptyList())
 	var lines: List<Org> = emptyList()
+
 	var skip: Boolean = false
-	var nextEntry: Org
+	var nextEntry: Org? = null
 	var nextIndent: Int = 0
+
 	var emptyLines: Int = 0
 	
 	while(!src.isEof()) {
 	    
-	    // println("AYAYA")
-	    if (!skip) nextIndent = skipWhitespaces()
-
-	    var c: Char = '\u0000'
-	    if(!skip) c = src.getChar()
-	    if(!skip && (testRange('0'..'9') || test('-'))) {
-		nextEntry = tryParseListEntry(c, nextIndent)
-	    } else {
-		nextEntry = Text(parseRawLine())
+	    if(!skip) {
+		nextIndent = skipWhitespaces()
+		var firstChar: Char = src.getChar()
+		if(testRange('0'..'9') || test('-')) {
+		    nextEntry = tryParseListEntry(firstChar, nextIndent)
+		} else {
+		    if(nextIndent != 0) {
+			nextEntry = Text(parseRawLine())
+		    } else {
+			nextEntry = parseLine()
+		    }
+		}
 	    }
-	    println(nextEntry.toString().length)
 	    skip = false
+
+	    nextEntry ?: throw ParserException("Skipped with null value")
+
+	    if(nextEntry is Text && nextEntry.isEmptyLine()) nextIndent = entry.indent + 1
+
 	    if(nextIndent == entry.indent) {
-		entry.add(Paragraph(lines))
+		if(!lines.isEmpty()) entry.add(Paragraph(lines))
 		lines = emptyList()
 		list.add(entry)
 		if(nextEntry is ListEntry) {
@@ -155,28 +181,28 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    return ListResult(nextEntry, nextIndent, list)
 		}
 	    } else if(nextIndent < entry.indent)  {
-		entry.add(Paragraph(lines))
+		if(!lines.isEmpty()) entry.add(Paragraph(lines))
 		list.add(entry)
 		return ListResult(nextEntry, nextIndent, list)
 	    } else {
 		if(nextEntry is ListEntry) {
-		    var (a, b, c) = parseList(nextEntry)
+		    val (a, b, c) = parseList(nextEntry)
 		    nextEntry = a
 		    nextIndent = b
 		    lines += c
 		    skip = true
 		} else {
-		    if(nextEntry.toString().isEmpty()) {
+		    if(nextEntry is Text && nextEntry.isEmptyLine()) {
 			emptyLines++
 		    } else {
 			emptyLines = 0
+			lines += nextEntry
 		    }
-		    if(emptyLines > 0) {
-			entry.add(Paragraph(lines))
+		    if(emptyLines >= 2) {
+			if(!lines.isEmpty()) entry.add(Paragraph(lines))
 			list.add(entry)
 			return ListResult(nextEntry, nextIndent, list)
 		    }
-		    lines += nextEntry
 		}
 	    }	    
 	}

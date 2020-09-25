@@ -79,4 +79,135 @@ Text 3
 	
 	assertEquals(org, res)
     }
+
+
+    @Test fun testMulitline() {
+
+	val org: Org = OrgParser(StringSource("""
+* Doc
+Text 1
+Same line\\
+Another line
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section("Doc", 1, listOf(
+			    Paragraph(listOf(
+					  Text("Text 1"),
+					  Text("Same line\n"),
+					  Text("Another line")
+			    ))
+		))
+	    )
+	)
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+
+    }
+    
+    @Test fun testList() {
+	
+	val org: Org = OrgParser(StringSource("""
+* Unordered List
+- elem 1
+
+- elem 2
+
+* Ordered List
+
+1. elem 1
+
+2. elem 2
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section("Unordered List", 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry("elem 1"),
+				    ListEntry("elem 2")
+			    ))
+		)),
+		Section("Ordered List", 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry("elem 1", "1."),
+				    ListEntry("elem 2", "2.")
+			    ))
+		))
+
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
+
+    @Test fun testListWithContent() {
+	
+	val org: Org = OrgParser(StringSource("""
+* List
+- elem 1
+  Text
+Not in list
+- elem 2
+  
+  Another Text
+
+  Still in list
+
+
+         Not in list too
+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section("List", 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry("elem 1", entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      Text("Text")
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    Text("Not in list")
+			    )),
+			    OrgList(
+				listOf(
+				    ListEntry("elem 2", entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      Text("Another Text"),
+							      Text("Still in list")
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    Text("Not in list too")
+			    ))
+		))
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
 }

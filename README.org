@@ -5,10 +5,16 @@
 Trying kotlin \\
 Tool for org-mode
 
-** Parser [1/3]
+** Parser [2/3]
 - [X] Sections
-- [ ] Lists
+- [X] Lists
 - [ ] Formated text
+  - [ ] Links
+  - [ ] Bold
+  - [ ] Italic
+  - [ ] Code
+  - [ ] Strikeout
+  - [ ] Underline?
 - ...
   
 ** TODO Tools

@@ -28,7 +28,7 @@ abstract class AbstractParser<T>(src: Source) : Parser<T> {
     public fun skipWhitespaces(): Int {
 	var i: Int = 0
 	
-	while(src.getChar().isWhitespace()) {
+	while(src.getChar().isWhitespace() && src.getChar() != '\n') {
 	    i++
 	    src.nextChar()
 	}

@@ -10,15 +10,14 @@ fun main(args: Array<String>) {
 * 5
 - List
   123
+- Still dashed list
+
+
 1. Also list
-
-
-
-
-
+2. Now numered list
 
    abs
-2.Not list
+2.Not list \\
 Test 5
 ** 6
 Test 5""")).parse()
