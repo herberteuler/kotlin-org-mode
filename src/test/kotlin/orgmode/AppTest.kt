@@ -12,12 +12,42 @@ class AppTest {
     //     val classUnderTest = App()
     //     assertNotNull(classUnderTest.greeting, "app should have a greeting")
     // }
+
+    fun parseMarkup(s: String): MarkupText {
+	return OrgParser(StringSource(s)).parse().entities[0].entities[0] as MarkupText
+    }
+
     @Test fun testParseText() {
 	
-	val org: Org = OrgParser(StringSource("""Test
+	val org: Org = parseMarkup("Test")
+
+	val res: Org = MarkupText(listOf(Text("Test")))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
+
+    @Test fun testParseTextWords() {
+	
+	val org: Org = parseMarkup("Test Text")
+
+	val res: Org = MarkupText(listOf(Text("Test"), Text("Text")))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
+
+    @Test fun testParseTextLines() {
+	
+	val org: Org = OrgParser(StringSource("""Test Text
+Second Line
 """)).parse()
 
-	val res: Org = Document(listOf(Paragraph(listOf(Text("Test")))))
+	val res: Org = Document(listOf(Paragraph(listOf(MarkupText(listOf(Text("Test"), Text("Text"))), MarkupText(listOf(Text("Second"), Text("Line")))))))
 	
 	println(org.toJson())
 	println(res.toJson())
@@ -34,10 +64,10 @@ class AppTest {
 
 	val res: Org = Document(
 	    listOf(
-		Section("Test1", 1, listOf(
-			    Section("Test 2", 2, emptyList())
+		Section(parseMarkup("Test1"), 1, listOf(
+			    Section(parseMarkup("Test 2"), 2, emptyList())
 		)),
-		Section("Test 3", 1, emptyList())
+		Section(parseMarkup("Test 3"), 1, emptyList())
 	    )
 	)
 	
@@ -59,18 +89,18 @@ Text 3
 
 	val res: Org = Document(
 	    listOf(
-		Section("Test1", 1, listOf(
+		Section(parseMarkup("Test1"), 1, listOf(
 			    Paragraph(listOf(
-					  Text("Text 1")
+					  parseMarkup("Text 1")
 			    )),
-			    Section("Test 2", 2, listOf(
+			    Section(parseMarkup("Test 2"), 2, listOf(
 					Paragraph(listOf(
-						      Text("Text 2"),
-						      Text("Text 3")
+						      parseMarkup("Text 2"),
+						      parseMarkup("Text 3")
 					))
 			    ))
 		)),
-		Section("Test 3", 1, emptyList())
+		Section(parseMarkup("Test 3"), 1, emptyList())
 	    )
 	)
 	
@@ -92,11 +122,11 @@ Another line
 
 	val res: Org = Document(
 	    listOf(
-		Section("Doc", 1, listOf(
+		Section(parseMarkup("Doc"), 1, listOf(
 			    Paragraph(listOf(
-					  Text("Text 1"),
-					  Text("Same line\n"),
-					  Text("Another line")
+					  parseMarkup("Text 1"),
+					  parseMarkup("Same line\\\\\n"),
+					  parseMarkup("Another line")
 			    ))
 		))
 	    )
@@ -126,20 +156,20 @@ Another line
 
 	val res: Org = Document(
 	    listOf(
-		Section("Unordered List", 1,
+		Section(parseMarkup("Unordered List"), 1,
 			listOf(
 			    OrgList(
 				listOf(
-				    ListEntry("elem 1"),
-				    ListEntry("elem 2")
+				    ListEntry(parseMarkup("elem 1")),
+				    ListEntry(parseMarkup("elem 2"))
 			    ))
 		)),
-		Section("Ordered List", 1,
+		Section(parseMarkup("Ordered List"), 1,
 			listOf(
 			    OrgList(
 				listOf(
-				    ListEntry("elem 1", "1."),
-				    ListEntry("elem 2", "2.")
+				    ListEntry(parseMarkup("elem 1"), "1."),
+				    ListEntry(parseMarkup("elem 2"), "2.")
 			    ))
 		))
 
@@ -171,36 +201,39 @@ Not in list
 
 	val res: Org = Document(
 	    listOf(
-		Section("List", 1,
+		Section(parseMarkup("List"), 1,
 			listOf(
 			    OrgList(
 				listOf(
-				    ListEntry("elem 1", entities =
+				    ListEntry(parseMarkup("elem 1"), entities =
 						  listOf(
 						      Paragraph(
 							  listOf(
-							      Text("Text")
+							      parseMarkup("Text")
 						      ))
 				    ))
 			    )),
 			    Paragraph(
 				listOf(
-				    Text("Not in list")
+				    parseMarkup("Not in list")
 			    )),
 			    OrgList(
 				listOf(
-				    ListEntry("elem 2", entities =
+				    ListEntry(parseMarkup("elem 2"), entities =
 						  listOf(
 						      Paragraph(
 							  listOf(
-							      Text("Another Text"),
-							      Text("Still in list")
+							      parseMarkup("Another Text")
+						      )),
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Still in list")
 						      ))
 				    ))
 			    )),
 			    Paragraph(
 				listOf(
-				    Text("Not in list too")
+				    parseMarkup("Not in list too")
 			    ))
 		))
 	))
@@ -227,23 +260,23 @@ Not in list
 
 	val res: Org = Document(
 	    listOf(
-		Section("List", 1,
+		Section(parseMarkup("List"), 1,
 			listOf(
 			    OrgList(
 				listOf(
-				    ListEntry("elem 1", entities =
+				    ListEntry(parseMarkup("elem 1"), entities =
 						  listOf(
 						      Paragraph(
 							  listOf(
-							      Text("Text")
+							      parseMarkup("Text")
 						      )),
 						      OrgList(
 							  listOf(
-							      ListEntry("inner list", entities =
+							      ListEntry(parseMarkup("inner list"), entities =
 									    listOf(
 										Paragraph(
 										    listOf(
-											Text("Inner list Text")
+											parseMarkup("Inner list Text")
 										))
 							      ))
 						      ))
@@ -251,7 +284,7 @@ Not in list
 			    )),
 			    Paragraph(
 				listOf(
-				    Text("Text")
+				    parseMarkup("Text")
 			    ))
 
 		))
@@ -277,23 +310,23 @@ Text
 
 	val res: Org = Document(
 	    listOf(
-		Section("List", 1,
+		Section(parseMarkup("List"), 1,
 			listOf(
 			    OrgList(
 				listOf(
-				    ListEntry("elem 1", entities =
+				    ListEntry(parseMarkup("elem 1"), entities =
 						  listOf(
 						      Paragraph(
 							  listOf(
-							      Text("Text")
+							      parseMarkup("Text")
 						      )),
 						      OrgList(
 							  listOf(
-							      ListEntry("inner list", entities =
+							      ListEntry(parseMarkup("inner list"), entities =
 									    listOf(
 										Paragraph(
 										    listOf(
-											Text("Inner list Text")
+											parseMarkup("Inner list Text")
 										))
 							      ))
 						      ))
@@ -301,7 +334,7 @@ Text
 			    )),
 			    Paragraph(
 				listOf(
-				    Text("Text")
+				    parseMarkup("Text")
 			    ))
 
 		))

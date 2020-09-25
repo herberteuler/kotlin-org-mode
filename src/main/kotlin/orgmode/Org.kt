@@ -41,7 +41,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
 class Paragraph(entities: List<Org> = emptyList()) : Org(entities) {
 
     override fun toString(): String {
-	return entities.fold("") {acc, e -> acc + ' ' + e.toString()}
+	return entities.foldIndexed("") {i, acc, e -> if(i == 0 || acc[acc.length - 1] == '\n') acc + e.toString() else acc + ' ' + e.toString()}
     }
 
     override fun toJson(): String {
@@ -71,29 +71,69 @@ class Paragraph(entities: List<Org> = emptyList()) : Org(entities) {
 
 }
 
-open class Text(text: String) : Org() {
+class Emphasis(entities: List<MarkupText>): MarkupText(entities) {
+    
+    override fun toString(): String = "*${super.toString()}*"
+    override fun toJson(): String = "\"" + super.toString() + "\"" // FIXME
+    override fun toHtml(): String = "<b>${super.toHtml()}</b>"
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Emphasis) return false
+	return super.equals(other)
+    }
+
+}
+
+class LineBreak() : Text("\n") {
+    override fun toHtml(): String = "</br>"
+    override fun toJson(): String = "{\"type\": \"line_break\"}"
+
+    override fun isEmpty(): Boolean = true
+}
+
+open class MarkupText(entities: List<MarkupText> = emptyList()): Org(entities) {
+
+    override fun toString(): String = entities.foldIndexed("") {
+	i, acc, e -> if(i == 0 || acc[acc.length - 1] == '\n') acc + e.toString() else acc + " " + e.toString()
+    }
+    override fun toJson(): String = "{ \"type\": \"markup\", \"elements\": [" + entities.foldIndexed("") {
+	i, acc, e -> if(i == 0) acc + e.toJson() else acc + ", " + e.toJson()
+    } + "] }"
+    override fun toHtml(): String = entities.foldIndexed("") {
+	i, acc, e -> if(i == 0) acc + e.toHtml() else acc + " " + e.toHtml()
+    }
+
+    open fun isEmpty(): Boolean = entities.all { (it as MarkupText).isEmpty() }
+    
+    override fun equals(other: Any?): Boolean {
+	if(other !is MarkupText) return false
+	return super.equals(other)
+    }
+}
+
+open class Text(text: String): MarkupText() {
 
     var text: String = text
 	get
 
     override fun toString(): String = text
     override fun toJson(): String = "\"" + text + "\""
-    override fun toHtml(): String = if(text[text.length - 1] == '\n') text.dropLast(1) + "</br>" else text
+    override fun toHtml(): String = text
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Text) return false
 	return other.text == text
     }
 
-    fun isEmptyLine(): Boolean = text.isEmpty()
+    override fun isEmpty(): Boolean = text.isEmpty()
 
 }
 
-open class Section(text: String, level: Int, entities: List<Org> = emptyList()) : Org(entities) {
+open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList()) : Org(entities) {
 
     var level: Int = level
 
-    var text: String = text
+    var text: MarkupText = text
 
     override fun toString(): String {
 	var prefix: String = "\n"
@@ -102,7 +142,7 @@ open class Section(text: String, level: Int, entities: List<Org> = emptyList()) 
 	    prefix += '*'
 	}
 
-	return prefix + ' ' + text + '\n' + super.toString()
+	return "$prefix ${text.toString()}\n${super.toString()}"
     }
 
     override fun toJson(): String {
@@ -113,12 +153,12 @@ open class Section(text: String, level: Int, entities: List<Org> = emptyList()) 
 	    elements += entities[i].toJson()
 	}
 
-	return "{ \"type\": \"section\", \"header\": \"$text\", \"level\": $level, \"elements\": [$elements] }"
+	return "{ \"type\": \"section\", \"header\": \"${text.toJson()}\", \"level\": $level, \"elements\": [$elements] }"
     }
 
     override fun toHtml(): String {
 	var innerHtml: String = super.toHtml()
-	return "<h$level>$text</h$level>$innerHtml"
+	return "<h$level>${text.toHtml()}</h$level>$innerHtml"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -128,7 +168,7 @@ open class Section(text: String, level: Int, entities: List<Org> = emptyList()) 
     
 }
 
-class Document(entities: List<Org> = emptyList()) : Section("", 0, entities) {
+class Document(entities: List<Org> = emptyList()) : Section(Text(""), 0, entities) {
 
     override fun toString(): String {
 	// return (this as Org).toString() FIXME
@@ -210,7 +250,7 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
 	}
     }
     override fun toString(): String {
-	return entries.fold("") {acc, e -> acc + '\n' + e.toString()}
+	return entries.fold("") {acc, e -> acc + '\n' + e.toString()} + "\n"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -232,17 +272,17 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
     }
 }
 
-class ListEntry(val text:String, bullet: String = "-", val indent: Int = 0, entities: List<Org> = emptyList()): Org(entities) {
+class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0, entities: List<Org> = emptyList()): Org(entities) {
 
     public val bullet: String = bullet
     
-    override fun toJson(): String = "{ \"type\": \"list_entry\", \"text\": \"$text\", \"entities\": [${super.toJson()}]}"
+    override fun toJson(): String = "{ \"type\": \"list_entry\", \"text\": \"${text.toJson()}\", \"entities\": [${super.toJson()}]}"
     override fun toHtml(): String {
-	return "<li>$text</br>${super.toHtml()}</li>"
+	return "<li>${text.toHtml()}</br>${super.toHtml()}</li>"
     }
     override fun toString(): String {
 	var prefix: String = " ".repeat(indent)
-	return "$prefix$bullet $text\n" + entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
+	return "$prefix$bullet ${text.toString()}\n" + entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
     }
 
     override fun equals(other: Any?): Boolean {

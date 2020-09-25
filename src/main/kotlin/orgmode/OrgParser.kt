@@ -50,7 +50,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		root.add(list)
 		skip = true
 		element = newElement
-	    } else if(element is Text && element.isEmptyLine()) {
+	    } else if(element is MarkupText && element.isEmpty()) {
 		if(!lines.isEmpty()) {
 		    root.add(Paragraph(lines))
 		    lines = emptyList()
@@ -77,26 +77,64 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    return tryParseListEntry(c, indent)
 	}
 	
-	return Text(parseRawLine())
+	return parseMarkup()
     }
 
-    fun parseRawLine(): String {
-	var buf: String = ""
+    class MarkupStack(var list: MutableList<String> = mutableListOf()) {
 
-	while(!test('\n') && !src.isEof()) {
-	    if(test('\\'))  {
-		if(test('\\')) {
-		    if(test('\n')) {
-			buf += '\n'
-			break;
-		    } else buf += '\\'
-		}
+	fun pop() = list.removeAt(list.size - 1)
+	fun push(s: String) = list.add(list.size, s)
+	fun has(s: String): Boolean {
+	    for(e in list) {
+		if(e == s) return true
 	    }
-	    buf += src.getChar()
-	    src.nextChar()
+	    return false
 	}
 
-	return buf
+	fun popIfHas(s: String): Boolean {
+	    val res: Boolean = has(s)
+	    if(res) {
+		while(list[list.size - 1] != s) {
+		    pop()
+		}
+	    }
+	    return true
+	}
+	
+    }
+    
+    public fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack()): MarkupText {
+
+	var word: String = ""
+
+	while(!src.isEof() && !test('\n')) {
+	    if(test('\\')) {
+		if(test('\\')) {
+		    if(test('\n')) {
+			if(!word.isEmpty()) root.add(Text(word))
+			root.add(LineBreak())
+			return root
+		    } else {
+			word += '\\'
+		    }
+		} else {
+		    word += src.getChar()
+		    src.nextChar()
+		}
+		continue
+	    }
+	    
+	    if(test(' ')) {
+		if(!word.isEmpty()) root.add(Text(word))
+		word = ""
+	    } else {
+		word += src.getChar()
+		src.nextChar()
+	    }
+	}
+	if(!word.isEmpty()) root.add(Text(word))
+
+	return root
     }
 
     fun tryParseHeader(): Org {
@@ -107,8 +145,8 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	return if(!test(' ')) {
 	    var prefix: String = ""
 	    for(i in 1..level) prefix += '*'
-	    Text(prefix + parseRawLine()) // FIXME: return formated text
-	} else Section(parseRawLine(), level)
+	    parseMarkup(MarkupText(listOf(Text(prefix))))
+	} else Section(parseMarkup(), level)
     }
     
     fun tryParseListEntry(firstChar: Char, indent: Int): Org {
@@ -122,16 +160,16 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		c = src.getChar()
 	    }
 
-	    if(!test('.')) return Text(bullet + parseRawLine())
+	    if(!test('.')) return parseMarkup(MarkupText(listOf(Text(bullet))))
 	    bullet += "."
 	}
 	
 	
 	if(!test(' ')) {
-	    return Text(bullet + parseRawLine()) // FIXME: return formated text
+	    return parseMarkup(MarkupText(listOf(Text(bullet))))
 	}
 
-	return ListEntry(parseRawLine(), bullet, indent)
+	return ListEntry(parseMarkup(), bullet, indent)
 
     }
 
@@ -159,7 +197,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    nextEntry = tryParseListEntry(firstChar, nextIndent)
 		} else {
 		    if(nextIndent != 0) {
-			nextEntry = Text(parseRawLine())
+			nextEntry = parseMarkup()
 		    } else {
 			nextEntry = parseLine()
 		    }
@@ -169,7 +207,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
 	    nextEntry ?: throw ParserException("Skipped with null value")
 
-	    if(nextEntry is Text && nextEntry.isEmptyLine()) nextIndent = entry.indent + 1
+	    if(nextEntry is MarkupText && nextEntry.isEmpty()) nextIndent = entry.indent + 1
 
 	    if(nextIndent == entry.indent) {
 		if(!lines.isEmpty()) entry.add(Paragraph(lines))
@@ -195,8 +233,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    entry.add(c)
 		    skip = true
 		} else {
-		    if(nextEntry is Text && nextEntry.isEmptyLine()) {
+		    if(nextEntry is MarkupText && nextEntry.isEmpty()) {
 			emptyLines++
+			if(!lines.isEmpty()) entry.add(Paragraph(lines))
+			lines = emptyList()
 		    } else {
 			emptyLines = 0
 			lines += nextEntry
