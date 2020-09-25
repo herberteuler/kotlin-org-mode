@@ -210,4 +210,56 @@ Not in list
 	
 	assertEquals(org, res)
     }
+
+    @Test fun testTwoEmptyLinesBreaksAllLists() {
+	
+	val org: Org = OrgParser(StringSource("""
+* List
+- elem 1
+  Text
+  - inner list
+    Inner list Text
+
+
+  Text
+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section("List", 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry("elem 1", entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      Text("Text")
+						      )),
+						      OrgList(
+							  listOf(
+							      ListEntry("inner list", entities =
+									    listOf(
+										Paragraph(
+										    listOf(
+											Text("Inner list Text")
+										))
+							      ))
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    Text("Text")
+			    ))
+
+		))
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
 }

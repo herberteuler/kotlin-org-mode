@@ -46,7 +46,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    root.add(Paragraph(lines))
 		    lines = emptyList()
 		}
-		var (newElement, _, list)  = parseList(element)
+		var (newElement, _, list, _)  = parseList(element)
 		root.add(list)
 		skip = true
 		element = newElement
@@ -135,7 +135,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
     }
 
-    data class ListResult(var entry: Org, var indent: Int, var list: OrgList)
+    data class ListResult(var entry: Org, var indent: Int, var list: OrgList, var emptyLines: Int)
     
     /* FIXME i am ugly */
     fun parseList(entryVal: ListEntry): ListResult {
@@ -178,18 +178,21 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		if(nextEntry is ListEntry) {
 		    entry = nextEntry
 		} else {
-		    return ListResult(nextEntry, nextIndent, list)
+		    return ListResult(nextEntry, nextIndent, list, emptyLines)
 		}
 	    } else if(nextIndent < entry.indent)  {
 		if(!lines.isEmpty()) entry.add(Paragraph(lines))
 		list.add(entry)
-		return ListResult(nextEntry, nextIndent, list)
+		return ListResult(nextEntry, nextIndent, list, emptyLines)
 	    } else {
 		if(nextEntry is ListEntry) {
-		    val (a, b, c) = parseList(nextEntry)
+		    if(!lines.isEmpty()) entry.add(Paragraph(lines))
+		    lines = emptyList()
+		    val (a, b, c, d) = parseList(nextEntry)
 		    nextEntry = a
 		    nextIndent = b
-		    lines += c
+		    emptyLines = d
+		    entry.add(c)
 		    skip = true
 		} else {
 		    if(nextEntry is Text && nextEntry.isEmptyLine()) {
@@ -201,7 +204,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    if(emptyLines >= 2) {
 			if(!lines.isEmpty()) entry.add(Paragraph(lines))
 			list.add(entry)
-			return ListResult(nextEntry, nextIndent, list)
+			return ListResult(nextEntry, nextIndent, list, emptyLines)
 		    }
 		}
 	    }	    
@@ -211,7 +214,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    entry.add(Paragraph(lines))
 	}
 	list.add(entry)
-	return ListResult(entry, entry.indent, list)
+	return ListResult(entry, entry.indent, list, emptyLines)
     }
     
 }
