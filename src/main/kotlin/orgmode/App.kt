@@ -14,7 +14,9 @@ fun main(args: Array<String>) {
     } else {
 
 	org = OrgParser(StringSource("""
-=tes /mnt test=
+* Functional
+*test* markup /simple/
+*more +complicated+ markup*
 """)).parse()
     }
     
