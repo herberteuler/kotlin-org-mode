@@ -8,13 +8,15 @@ Tool for org-mode
 ** Parser [2/3]
 - [X] Sections
 - [X] Lists
-- [ ] Formated text
+- [-] Formated text
   - [ ] Links
-  - [ ] Bold
-  - [ ] Italic
-  - [ ] Code
-  - [ ] Strikeout
-  - [ ] Underline?
-- ...
+  - [X] Bold
+  - [X] Italic
+  - [X] Code
+  - [X] Strikeout
+  - [X] Underline
+- [ ] Dates
+- [ ] Code blocks
+- [ ] Parameters
   
 ** TODO Tools

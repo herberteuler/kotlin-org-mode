@@ -8,7 +8,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
 
     override fun toString(): String = entities.fold("") {acc, e -> acc + e.toString()}
 
-    fun add(element: Org): Unit {
+    open fun add(element: Org): Unit {
 	entities += element
     }
 
@@ -71,10 +71,64 @@ class Paragraph(entities: List<Org> = emptyList()) : Org(entities) {
 
 }
 
-class Emphasis(entities: List<MarkupText>): MarkupText(entities) {
+class Code(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    override var markup_type: String = "code"
+    
+    override fun toString(): String = "=${super.toString()}="
+    override fun toHtml(): String = "<code>${super.toHtml()}</code>"
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Emphasis) return false
+	return super.equals(other)
+    }
+
+}
+class Underline(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    override var markup_type: String = "underline"
+    
+    override fun toString(): String = "_${super.toString()}_"
+    override fun toHtml(): String = "<u>${super.toHtml()}</u>"
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Emphasis) return false
+	return super.equals(other)
+    }
+
+}
+class Strikeout(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    override var markup_type: String = "strikeout"
+    
+    override fun toString(): String = "+${super.toString()}+"
+    override fun toHtml(): String = "<s>${super.toHtml()}</s>"
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Emphasis) return false
+	return super.equals(other)
+    }
+
+}
+class Italic(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    override var markup_type: String = "italic"
+    
+    override fun toString(): String = "/${super.toString()}/"
+    override fun toHtml(): String = "<i>${super.toHtml()}</i>"
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Emphasis) return false
+	return super.equals(other)
+    }
+
+}
+
+class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    override var markup_type: String = "emphasis"
     
     override fun toString(): String = "*${super.toString()}*"
-    override fun toJson(): String = "\"" + super.toString() + "\"" // FIXME
     override fun toHtml(): String = "<b>${super.toHtml()}</b>"
 
     override fun equals(other: Any?): Boolean {
@@ -91,12 +145,22 @@ class LineBreak() : Text("\n") {
     override fun isEmpty(): Boolean = true
 }
 
-open class MarkupText(entities: List<MarkupText> = emptyList()): Org(entities) {
+open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): Org(entities) {
+    
+    init {
+	if(other != null) {
+	    this.entities = other.entities
+	} else {
+	    this.entities = entities
+	}
+    }
+
+    open var markup_type: String = "regular"
 
     override fun toString(): String = entities.foldIndexed("") {
 	i, acc, e -> if(i == 0 || acc[acc.length - 1] == '\n') acc + e.toString() else acc + " " + e.toString()
     }
-    override fun toJson(): String = "{ \"type\": \"markup\", \"elements\": [" + entities.foldIndexed("") {
+    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"$markup_type\", \"elements\": [" + entities.foldIndexed("") {
 	i, acc, e -> if(i == 0) acc + e.toJson() else acc + ", " + e.toJson()
     } + "] }"
     override fun toHtml(): String = entities.foldIndexed("") {
@@ -109,10 +173,32 @@ open class MarkupText(entities: List<MarkupText> = emptyList()): Org(entities) {
 	if(other !is MarkupText) return false
 	return super.equals(other)
     }
+
+    override fun add(element: Org) {
+	if(element is MarkupText && element.markup_type == "regular") {
+	    for(e in element.entities) {
+		add(e)
+	    }
+	} else if(entities.size == 0) {
+	    entities += element
+	} else {
+	    val last: Org = entities[entities.size - 1]
+	    if(last is Text && element is Text && last.skipSpace) {
+		last.text += element.text
+		last.skipSpace = false
+	    } else {
+		entities += element
+	    }
+	}
+    }
 }
 
-open class Text(text: String): MarkupText() {
+open class Text(text: String, skipSpace: Boolean = false): MarkupText() {
 
+    var skipSpace: Boolean = skipSpace
+
+    override var markup_type = "text"
+    
     var text: String = text
 	get
 
@@ -217,6 +303,8 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
 	    } else throw ParserException("Unknow bullet type")
 	} else if(entries[0].bullet[0] == '-') {
 	    type = BULLET.DASH
+	} else if(entries[0].bullet[0] == '+') {
+	    type = BULLET.PLUS
 	} else {
 	    throw ParserException("Unknow bullet type")
 	}
@@ -246,6 +334,7 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
 	return when(type) {
 	    BULLET.NUM_DOT -> "<ol>$elements</ol>"
 	    BULLET.DASH -> "<ul>$elements</ul>"
+	    BULLET.PLUS -> "<ul>$elements</ul>"
 	    else -> throw OrgException("Unknown list type")
 	}
     }
@@ -268,6 +357,7 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
     public enum class BULLET {
 	NUM_DOT,
 	DASH,
+	PLUS,
 	NOTSET
     }
 }

@@ -6,21 +6,21 @@ package orgmode
 fun main(args: Array<String>) {
 
     val org: Org = OrgParser(StringSource("""
-* 1
-* 5
-- List
-  123
-- Still dashed list
-
-
-1. Also list
-2. Now numered list
-
-   abs
-2.Not list \\
-Test 5
-** 6
-Test 5""")).parse()
+* Test markup
+Test 5 *Thi is bold* and it's not*/not italic/ /italic/ *bold with /italic +strikeout+/*
+* Test /markup/ in headers +broken+
+* Test markup in lists
+- there is *markup*
+* Plus lists
++ elem 1
++ elem 2
++not list +strikeout plus *bold* and also =monospaced code=+ \\
+=monospace=
++strikeout+
+*emphasis*
+_underline_
+/italic/ test
+***Not header bold""")).parse()
 
     println(org.toString())
     println(org.toJson())
