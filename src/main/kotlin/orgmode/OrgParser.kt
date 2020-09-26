@@ -12,7 +12,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
     
     fun parseSection(root: Section): Section? {
 
-	var lines: List<Org> = emptyList()
+	var lines: List<MarkupText> = emptyList()
 
 	var skip: Boolean = false
 
@@ -55,8 +55,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    root.add(Paragraph(lines))
 		    lines = emptyList()
 		}
+	    } else if(element is MarkupText){
+		lines += element as MarkupText
 	    } else {
-		lines += element
+		throw ParserException("Unknown type when parsenf section")
 	    }
 	    
 	}
@@ -136,13 +138,13 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
     
     fun getMarkup(symbol: Char, text: MarkupText): MarkupText {
 	return when(symbol) {
-	    '*' -> Emphasis(other = text)
-	    '/' -> Italic(other = text)
-	    '+' -> Strikeout(other = text)
-	    '=' -> Code(other = text)
-	    '_' -> Underline(other = text)
-	    else -> MarkupText(other = text)
-	}
+	    '*' -> ::Emphasis
+	    '/' -> ::Italic
+	    '+' -> ::Strikeout
+	    '=' -> ::Code
+	    '_' -> ::Underline
+	    else -> ::MarkupText
+	}(listOf(), text)
     }
 
     fun parseMarkupWithSymbol(symbol: Char, prefix: String = ""): MarkupText {
@@ -157,6 +159,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    root.add(Text(prefix + symbol, skipSpace = true))
 	    root.add(res)
 	} else {
+	    if(prefix != "") root.add(Text(prefix, skipSpace = true))
 	    root.add(res)
 	    res = parseMarkup()
 	    root.add(res)
@@ -208,7 +211,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 			var content: MarkupText = parseMarkup(stack = stack)
 			if(stack.has(id)) {
 			    stack.popUntil(id)
-			    root.add(Text(symbol.toString()))
+			    root.add(Text(symbol.toString(), skipSpace = true))
 			}
 			root.add(content)
 		    } else {
@@ -296,7 +299,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
 	var entry: ListEntry = entryVal
 	var list: OrgList = OrgList(emptyList())
-	var lines: List<Org> = emptyList()
+	var lines: List<MarkupText> = emptyList()
 
 	var skip: Boolean = false
 	var nextEntry: Org? = null
@@ -353,9 +356,11 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 			emptyLines++
 			if(!lines.isEmpty()) entry.add(Paragraph(lines))
 			lines = emptyList()
-		    } else {
+		    } else if(nextEntry is MarkupText) {
 			emptyLines = 0
 			lines += nextEntry
+		    } else {
+			throw ParserException("Unknown type when parsing list")
 		    }
 		    if(emptyLines >= 2) {
 			if(!lines.isEmpty()) entry.add(Paragraph(lines))

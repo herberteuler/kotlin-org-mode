@@ -38,87 +38,71 @@ abstract class Org(entities: List<Org> = emptyList()) {
     
 }
 
-class Paragraph(entities: List<Org> = emptyList()) : Org(entities) {
+enum class MARKUP_TYPE {
+    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT
+}
 
-    override fun toString(): String {
-	return entities.foldIndexed("") {i, acc, e -> if(i == 0 || acc[acc.length - 1] == '\n') acc + e.toString() else acc + ' ' + e.toString()}
-    }
+class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override fun toJson(): String {
-
-	var lines: String = ""
-	
-	for(i in entities.indices) {
-	    if(i != 0) {
-		lines += ", "
-	    }
-	    lines += entities[i].toJson()
-	}
-
-	return "{ \"type\": \"paragraph\", \"lines\": [$lines] }"
-						 
-    }
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.PARAGRAPH
+    
+    override fun toString(): String = "${super.toString()}\n"
+    override fun toHtml(): String = "<p>${super.toHtml()}</p>"
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Paragraph) return false
 	return super.equals(other)
     }
 
-    override fun toHtml(): String {
-	var innerHtml: String = entities.fold("") {acc, e -> acc + ' ' + e.toHtml()}
-	return "<p>$innerHtml</p>"
-    }
-
 }
-
 class Code(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override var markup_type: String = "code"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.CODE
     
     override fun toString(): String = "=${super.toString()}="
     override fun toHtml(): String = "<code>${super.toHtml()}</code>"
 
     override fun equals(other: Any?): Boolean {
-	if(other !is Emphasis) return false
+	if(other !is Code) return false
 	return super.equals(other)
     }
 
 }
 class Underline(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override var markup_type: String = "underline"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.UNDERLINE
     
     override fun toString(): String = "_${super.toString()}_"
     override fun toHtml(): String = "<u>${super.toHtml()}</u>"
 
     override fun equals(other: Any?): Boolean {
-	if(other !is Emphasis) return false
+	if(other !is Underline) return false
 	return super.equals(other)
     }
 
 }
 class Strikeout(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override var markup_type: String = "strikeout"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.STRIKEOUT
     
     override fun toString(): String = "+${super.toString()}+"
     override fun toHtml(): String = "<s>${super.toHtml()}</s>"
 
     override fun equals(other: Any?): Boolean {
-	if(other !is Emphasis) return false
+	if(other !is Strikeout) return false
 	return super.equals(other)
     }
 
 }
 class Italic(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override var markup_type: String = "italic"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.ITALIC
     
     override fun toString(): String = "/${super.toString()}/"
     override fun toHtml(): String = "<i>${super.toHtml()}</i>"
 
     override fun equals(other: Any?): Boolean {
-	if(other !is Emphasis) return false
+	if(other !is Italic) return false
 	return super.equals(other)
     }
 
@@ -126,7 +110,7 @@ class Italic(entities: List<MarkupText> = emptyList(), other: MarkupText? = null
 
 class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
 
-    override var markup_type: String = "emphasis"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.EMPHASIS
     
     override fun toString(): String = "*${super.toString()}*"
     override fun toHtml(): String = "<b>${super.toHtml()}</b>"
@@ -145,22 +129,27 @@ class LineBreak() : Text("\n") {
     override fun isEmpty(): Boolean = true
 }
 
-open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): Org(entities) {
-    
+open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): Org() {
+
+    open fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.REGULAR
+
     init {
 	if(other != null) {
-	    this.entities = other.entities
+	    for(e in other.entities) {
+		add(e)
+	    }
 	} else {
-	    this.entities = entities
+	    // this.entities = other.entities
+	    for(e in entities) {
+		add(e)
+	    }
 	}
     }
 
-    open var markup_type: String = "regular"
-
     override fun toString(): String = entities.foldIndexed("") {
-	i, acc, e -> if(i == 0 || acc[acc.length - 1] == '\n') acc + e.toString() else acc + " " + e.toString()
+	i, acc, e -> if(i == 0 || (i > 0 && entities[i - 1] is LineBreak)) acc + e.toString() else acc + " " + e.toString()
     }
-    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"$markup_type\", \"elements\": [" + entities.foldIndexed("") {
+    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"${getMarkupType()}\", \"elements\": [" + entities.foldIndexed("") {
 	i, acc, e -> if(i == 0) acc + e.toJson() else acc + ", " + e.toJson()
     } + "] }"
     override fun toHtml(): String = entities.foldIndexed("") {
@@ -174,12 +163,18 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 	return super.equals(other)
     }
 
-    override fun add(element: Org) {
-	if(element is MarkupText && element.markup_type == "regular") {
-	    for(e in element.entities) {
+    open fun add(other: MarkupText) {
+	if(other.getMarkupType() == getMarkupType() || (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)) {
+	    for(e in other.entities) {
 		add(e)
 	    }
-	} else if(entities.size == 0) {
+	} else {
+	    entities += other
+	}
+    }
+
+    override fun add(element: Org) {
+	if(entities.size == 0) {
 	    entities += element
 	} else {
 	    val last: Org = entities[entities.size - 1]
@@ -197,7 +192,7 @@ open class Text(text: String, skipSpace: Boolean = false): MarkupText() {
 
     var skipSpace: Boolean = skipSpace
 
-    override var markup_type = "text"
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.TEXT
     
     var text: String = text
 	get
@@ -239,7 +234,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
 	    elements += entities[i].toJson()
 	}
 
-	return "{ \"type\": \"section\", \"header\": \"${text.toJson()}\", \"level\": $level, \"elements\": [$elements] }"
+	return "{ \"type\": \"section\", \"header\": ${text.toJson()}, \"level\": $level, \"elements\": [$elements] }"
     }
 
     override fun toHtml(): String {
@@ -366,7 +361,7 @@ class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0,
 
     public val bullet: String = bullet
     
-    override fun toJson(): String = "{ \"type\": \"list_entry\", \"text\": \"${text.toJson()}\", \"entities\": [${super.toJson()}]}"
+    override fun toJson(): String = "{ \"type\": \"list_entry\", \"text\": ${text.toJson()}, \"entities\": [${super.toJson()}]}"
     override fun toHtml(): String {
 	return "<li>${text.toHtml()}</br>${super.toHtml()}</li>"
     }

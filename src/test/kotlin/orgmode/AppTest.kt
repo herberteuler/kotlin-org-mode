@@ -14,7 +14,7 @@ class AppTest {
     // }
 
     fun parseMarkup(s: String): MarkupText {
-	return OrgParser(StringSource(s)).parse().entities[0].entities[0] as MarkupText
+	return MarkupText(OrgParser(StringSource(s)).parse().entities[0].entities as List<MarkupText>)
     }
 
     @Test fun testParseText() {
@@ -55,6 +55,105 @@ Second Line
 	assertEquals(org, res)
     }
 
+    @Test fun testParseMarkupEmphasis() {
+	
+	val org: Org = OrgParser(StringSource("""
+*test* \\
+***not header
+****emphasis*
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Paragraph(
+		    listOf(
+			MarkupText(
+			    listOf(
+				Emphasis(listOf(Text("test"))),
+				LineBreak())
+			),
+			MarkupText(
+			    listOf(
+				Text("***not"),
+				Text("header"),
+				Text("***"),
+				Emphasis(listOf(Text("emphasis")))
+			))
+		))
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
+
+    @Test fun testParseMarkupStrikeout() {
+	
+	val org: Org = OrgParser(StringSource("""
++test+ \\
++not list
++++not list+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Paragraph(
+		    listOf(
+			MarkupText(
+			    listOf(
+				Strikeout(listOf(Text("test"))),
+				LineBreak())
+			),
+			MarkupText(
+			    listOf(
+				Text("+not"),
+				Text("list"),
+				Text("++"),
+				Strikeout(listOf(
+					      Text("not"),
+					      Text("list")
+				))
+			))
+		))
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
+    }
+
+    @Test fun testParseMarkup() {
+
+	for((c, e) in mapOf('_' to ::Underline, '=' to ::Code, '/' to ::Italic)) {
+	    val org: Org = OrgParser(StringSource("""
+${c}test${c} \\
+${c}test
+""")).parse()
+
+	    val res: Org = Document(
+		listOf(
+		    Paragraph(
+			listOf(
+			    MarkupText(
+				listOf(
+				    e(listOf(Text("test")), null),
+				    LineBreak())
+			    ),
+			    MarkupText(
+				listOf(
+				    Text("${c}test")
+			    ))
+		    ))
+	    ))
+	    
+	    println(org.toJson())
+	    println(res.toJson())
+	    
+	    assertEquals(org, res)
+	}
+    }
     @Test fun testParseSections() {
 	
 	val org: Org = OrgParser(StringSource("""* Test1
