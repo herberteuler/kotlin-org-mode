@@ -3,26 +3,24 @@
  */
 package orgmode
 
+import java.io.File
+
 fun main(args: Array<String>) {
 
-    val org: Org = OrgParser(StringSource("""
-* Test markup
-Test 5 *Thi is bold* and it's not*/not italic/ /italic/ *bold with /italic +strikeout+/*
-* Test /markup/ in headers +broken+
-* Test markup in lists
-- there is *markup*
-* Plus lists
-+ elem 1
-+ elem 2
-+not list +strikeout plus *bold* and also =monospaced code=+ \\
-=monospace=
-+strikeout+
-*emphasis*
-_underline_
-/italic/ test
-***Not header bold""")).parse()
+    var org: Org
+    
+    if(args.size > 0) {
+	org = OrgParser(FileSource(args[0])).parse()
+    } else {
+
+	org = OrgParser(StringSource("""
+=tes /mnt test=
+""")).parse()
+    }
+    
 
     println(org.toString())
     println(org.toJson())
-    println(org.toHtml())
+
+    File("/tmp/kt.html").writeText(org.toHtml())
 }

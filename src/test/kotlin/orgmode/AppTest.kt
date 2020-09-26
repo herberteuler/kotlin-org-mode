@@ -126,7 +126,7 @@ Second Line
 
     @Test fun testParseMarkup() {
 
-	for((c, e) in mapOf('_' to ::Underline, '=' to ::Code, '/' to ::Italic)) {
+	for((c, e) in mapOf('_' to ::Underline, '/' to ::Italic)) {
 	    val org: Org = OrgParser(StringSource("""
 ${c}test${c} \\
 ${c}test
@@ -153,6 +153,34 @@ ${c}test
 	    
 	    assertEquals(org, res)
 	}
+    }
+    @Test fun testParseMarkupCode() {
+
+	val org: Org = OrgParser(StringSource("""
+=*test*= \\
+=test
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Paragraph(
+		    listOf(
+			MarkupText(
+			    listOf(
+				Code("*test*"),
+				LineBreak())
+			),
+			MarkupText(
+			    listOf(
+				Text("=test")
+			))
+		))
+	))
+	
+	println(org.toJson())
+	println(res.toJson())
+	
+	assertEquals(org, res)
     }
     @Test fun testParseSections() {
 	

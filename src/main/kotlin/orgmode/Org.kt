@@ -1,6 +1,11 @@
 
 package orgmode
 
+
+val HTML_SPECIAL = mapOf('<' to "&lt",
+			 '>' to "&gt")
+fun String.htmlEscape(): String = fold("") {acc, e -> acc + HTML_SPECIAL.getOrDefault(e, e.toString())}
+
 abstract class Org(entities: List<Org> = emptyList()) {
 
     var entities: List<Org> = entities
@@ -8,8 +13,9 @@ abstract class Org(entities: List<Org> = emptyList()) {
 
     override fun toString(): String = entities.fold("") {acc, e -> acc + e.toString()}
 
-    open fun add(element: Org): Unit {
+    open fun add(element: Org): Org {
 	entities += element
+	return this
     }
 
     override operator fun equals(other: Any?): Boolean {
@@ -55,16 +61,17 @@ class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
     }
 
 }
-class Code(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+class Code(text: String): Text(text, false) {
 
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.CODE
     
-    override fun toString(): String = "=${super.toString()}="
-    override fun toHtml(): String = "<code>${super.toHtml()}</code>"
+    override fun toString(): String = "=${this.text}="
+    override fun toHtml(): String = "<code>${this.text.htmlEscape()}</code>"
+    override fun toJson(): String = "{\"type\": \"markup\", \"markup_type\": \"CODE\", \"code\": ${super.toJson()}}"
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Code) return false
-	return super.equals(other)
+	return text == other.text
     }
 
 }
@@ -139,7 +146,6 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 		add(e)
 	    }
 	} else {
-	    // this.entities = other.entities
 	    for(e in entities) {
 		add(e)
 	    }
@@ -163,7 +169,7 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 	return super.equals(other)
     }
 
-    open fun add(other: MarkupText) {
+    open fun add(other: MarkupText): MarkupText {
 	if(other.getMarkupType() == getMarkupType() || (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)) {
 	    for(e in other.entities) {
 		add(e)
@@ -171,20 +177,22 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 	} else {
 	    entities += other
 	}
+	return this
     }
 
-    override fun add(element: Org) {
+    override fun add(element: Org): MarkupText {
 	if(entities.size == 0) {
 	    entities += element
 	} else {
 	    val last: Org = entities[entities.size - 1]
 	    if(last is Text && element is Text && last.skipSpace) {
 		last.text += element.text
-		last.skipSpace = false
+		last.skipSpace = element.skipSpace
 	    } else {
 		entities += element
 	    }
 	}
+	return this
     }
 }
 
@@ -199,7 +207,7 @@ open class Text(text: String, skipSpace: Boolean = false): MarkupText() {
 
     override fun toString(): String = text
     override fun toJson(): String = "\"" + text + "\""
-    override fun toHtml(): String = text
+    override fun toHtml(): String = text.htmlEscape()
 
     override fun equals(other: Any?): Boolean {
 	if(other !is Text) return false

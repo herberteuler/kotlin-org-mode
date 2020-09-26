@@ -1,13 +1,15 @@
 
 package orgmode
 
+import java.io.File
+
 interface Source {
     fun isEof(): Boolean
     fun getChar(): Char
     fun nextChar(): Unit
 }
 
-class StringSource : Source {
+open class StringSource : Source {
 
     private var src: String
     private var index: Int
@@ -30,3 +32,5 @@ class StringSource : Source {
     }
 
 }
+
+class FileSource(file: String) : StringSource(File(file).readText())
