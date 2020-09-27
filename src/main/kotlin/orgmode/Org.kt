@@ -169,6 +169,8 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 	return super.equals(other)
     }
 
+    open fun add(element: Text): MarkupText = add(element as Org)
+
     open fun add(other: MarkupText): MarkupText {
 	if(other.getMarkupType() == getMarkupType() || (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)) {
 	    for(e in other.entities) {
@@ -181,19 +183,17 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
     }
 
     override fun add(element: Org): MarkupText {
-	if(entities.size == 0) {
+	if(entities.isEmpty()) {
 	    entities += element
+	    return this
+	}
+	val last: Org = entities[entities.size - 1]
+	if(element is Text && last is Text && element.getMarkupType() == MARKUP_TYPE.TEXT &&
+	   last.getMarkupType() == MARKUP_TYPE.TEXT && last.skipSpace) {
+	    last.text += element.text
+	    last.skipSpace = element.skipSpace
 	} else {
-	    val last: Org = entities[entities.size - 1]
-	    if(last is Text && element is Text &&
-	       last.getMarkupType() == MARKUP_TYPE.TEXT &&
-	       element.getMarkupType() == MARKUP_TYPE.TEXT &&
-	       last.skipSpace) {
-		last.text += element.text
-		last.skipSpace = element.skipSpace
-	    } else {
-		entities += element
-	    }
+	    entities += element
 	}
 	return this
     }

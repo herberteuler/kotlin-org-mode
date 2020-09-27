@@ -158,7 +158,8 @@ ${c}test
 
 	val org: Org = OrgParser(StringSource("""
 =*test*= \\
-=test
+=test \\
+test =code=
 """)).parse()
 
 	val res: Org = Document(
@@ -168,12 +169,18 @@ ${c}test
 			MarkupText(
 			    listOf(
 				Code("*test*"),
-				LineBreak())
-			),
+				LineBreak()
+			)),
 			MarkupText(
 			    listOf(
-				Text("=test")
-			))
+				Text("=test"),
+				LineBreak()
+			)),
+			MarkupText(
+			    listOf(
+				Text("test"),
+				Code("code")
+			    ))
 		))
 	))
 	

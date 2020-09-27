@@ -14,8 +14,7 @@ fun main(args: Array<String>) {
     } else {
 
 	org = OrgParser(StringSource("""
-  =nixos-generate-config --root /mnt=
-- TODO get config from github
+- C++
 """)).parse()
     }
     

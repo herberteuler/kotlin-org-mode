@@ -133,6 +133,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		return false
 	    }
 	}
+
+	fun clear() {
+	    while(list.size > 0) pop()
+	}
 	
     }
 
@@ -185,6 +189,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    if(test('\n')) {
 			if(!word.isEmpty()) root.add(Text(word))
 			root.add(LineBreak())
+			stack.clear() // FIXME pop?
 			return root
 		    } else {
 			word += '\\'
@@ -224,7 +229,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 			} else {
 			    stack.pop()
 			}
-			if(content.getMarkupType() == MARKUP_TYPE.CODE) root.entities = listOf()
+			// if(content.getMarkupType() == MARKUP_TYPE.CODE) root.entities = listOf()
 			root.add(content)
 		    } else {
 			raw_markup += ' '
@@ -245,10 +250,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		if(symbol != null) {
 		    if(src.getChar() == ' ' || src.getChar() == '\n' || src.isEof() || src.getChar() in markup_symbols) {
 			if(stack.popUntil(symbol)) {
-			    if(!word.isEmpty()) root.add(Text(word, skipSpace = src.getChar() in markup_symbols))
 			    if(symbol == '=') {
 				return Code(raw_markup)
 			    }
+			    if(!word.isEmpty()) root.add(Text(word, skipSpace = src.getChar() in markup_symbols))
 			    raw_markup += symbol
 			    return getMarkup(symbol, root)
 			} else {
@@ -268,7 +273,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    }
 	}
 	if(!word.isEmpty()) root.add(Text(word))
-	stack.pop()
+	stack.clear() // FIXME pop?
 
 	return root
     }
