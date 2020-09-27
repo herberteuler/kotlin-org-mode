@@ -14,9 +14,8 @@ fun main(args: Array<String>) {
     } else {
 
 	org = OrgParser(StringSource("""
-* Functional
-*test* markup /simple/
-*more +complicated+ markup*
+  =nixos-generate-config --root /mnt=
+- TODO get config from github
 """)).parse()
     }
     

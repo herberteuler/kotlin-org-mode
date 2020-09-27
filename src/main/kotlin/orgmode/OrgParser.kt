@@ -79,7 +79,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    return tryParseListEntry(c, indent)
 	}
 	
-	return parseMarkup()(null)
+	return parseMarkup().also { test('\n') }
     }
 
     class MarkupStack(list: MutableList<Char> = mutableListOf()) {
@@ -94,6 +94,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	}
 	
 	fun pop() {
+	    if(list.isEmpty()) return
 	    list.removeAt(list.size - 1)
 	}
 	fun push(c: Char): Int {
@@ -137,14 +138,14 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
     var markup_symbols: List<Char> = listOf('*', '/', '+', '=', '_')
     
-    fun getMarkup(symbol: Char): (MarkupText?) -> MarkupText {
-	return {text -> when(symbol) {
+    fun getMarkup(symbol: Char, text: MarkupText): MarkupText {
+	return when(symbol) {
 	    '*' -> ::Emphasis
 	    '/' -> ::Italic
 	    '+' -> ::Strikeout
 	    '_' -> ::Underline
 	    else -> ::MarkupText
-	}(listOf(), text) }
+	}(listOf(), text)
     }
 
     fun parseMarkupWithSymbol(symbol: Char, prefix: String = ""): MarkupText {
@@ -153,7 +154,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	
 	val id: Int = stack.push(symbol)
 
-	var res = parseMarkup(stack = stack)(null)
+	var res = parseMarkup(stack = stack).also { test('\n') }
 
 	if(stack.top().second != id) {
 	    root.add(Text(prefix + symbol, skipSpace = true))
@@ -161,7 +162,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	} else {
 	    if(prefix != "") root.add(Text(prefix, skipSpace = true))
 	    root.add(res)
-	    res = parseMarkup()(null)
+	    res = parseMarkup()
 	    root.add(res)
 	}
 	
@@ -170,13 +171,13 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
     var raw_markup: String = ""
     
-    fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack(), prefix: String = ""): (MarkupText?) -> MarkupText {
+    fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack(), prefix: String = ""): MarkupText {
 
 	var word: String = prefix
 
 	var beginOfLine: Boolean = true
 
-	while(!src.isEof() && !test('\n')) {
+	while(!src.isEof() && src.getChar() != '\n') {
 	    if(test('\\')) {
 		raw_markup += '\\'
 		if(test('\\')) {
@@ -184,7 +185,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    if(test('\n')) {
 			if(!word.isEmpty()) root.add(Text(word))
 			root.add(LineBreak())
-			return { _ -> root }
+			return root
 		    } else {
 			word += '\\'
 		    }
@@ -216,13 +217,14 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    if(!test(' ')) {
 			val id: Int = stack.push(symbol)
 			if(symbol == '=') raw_markup = ""
-			var content: MarkupText = parseMarkup(stack = stack)(null)
+			var content: MarkupText = parseMarkup(stack = stack)
 			if(stack.top().second != id) {
 			    root.add(Text(symbol.toString(), skipSpace = true))
 			    // return root
 			} else {
 			    stack.pop()
 			}
+			if(content.getMarkupType() == MARKUP_TYPE.CODE) root.entities = listOf()
 			root.add(content)
 		    } else {
 			raw_markup += ' '
@@ -245,10 +247,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 			if(stack.popUntil(symbol)) {
 			    if(!word.isEmpty()) root.add(Text(word, skipSpace = src.getChar() in markup_symbols))
 			    if(symbol == '=') {
-				return { _ -> Code(raw_markup) }
+				return Code(raw_markup)
 			    }
 			    raw_markup += symbol
-			    return { _ -> getMarkup(symbol)(root) }
+			    return getMarkup(symbol, root)
 			} else {
 			    root.add(Text(word + symbol, skipSpace = true))
 			    word = ""
@@ -266,8 +268,9 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    }
 	}
 	if(!word.isEmpty()) root.add(Text(word))
+	stack.pop()
 
-	return { _ -> root }
+	return root
     }
 
     fun tryParseHeader(): Org {
@@ -279,7 +282,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 	    var prefix: String = ""
 	    for(i in 1..level-1) prefix += '*'
 	    parseMarkupWithSymbol('*', prefix)
-	} else Section(parseMarkup()(null), level)
+	} else Section(parseMarkup().also { test('\n') }, level)
     }
     
     fun tryParseListEntry(firstChar: Char, indent: Int): Org {
@@ -293,7 +296,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		c = src.getChar()
 	    }
 
-	    if(!test('.')) return parseMarkup(prefix = bullet)(null)
+	    if(!test('.')) return parseMarkup(prefix = bullet).also { test('\n') }
 	    bullet += "."
 	}
 	
@@ -303,10 +306,10 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		return parseMarkupWithSymbol(firstChar)
 	    }
 
-	    return parseMarkup(root = MarkupText(listOf(Text(firstChar.toString()))))(null)
+	    return parseMarkup(root = MarkupText(listOf(Text(firstChar.toString())))).also { test('\n') }
 	}
 
-	return ListEntry(parseMarkup()(null), bullet, indent)
+	return ListEntry(parseMarkup().also { test('\n') }, bullet, indent)
 
     }
 
@@ -334,7 +337,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 		    nextEntry = tryParseListEntry(firstChar, nextIndent)
 		} else {
 		    if(nextIndent != 0) {
-			nextEntry = parseMarkup()(null)
+			nextEntry = parseMarkup().also { test('\n') }
 		    } else {
 			nextEntry = parseLine()
 		    }

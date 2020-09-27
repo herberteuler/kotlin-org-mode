@@ -41,7 +41,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
 	return res
     }
     open fun toHtml(): String = entities.fold("") {acc, e -> acc + e.toHtml()}
-    
+
 }
 
 enum class MARKUP_TYPE {
@@ -185,7 +185,10 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 	    entities += element
 	} else {
 	    val last: Org = entities[entities.size - 1]
-	    if(last is Text && element is Text && last.skipSpace) {
+	    if(last is Text && element is Text &&
+	       last.getMarkupType() == MARKUP_TYPE.TEXT &&
+	       element.getMarkupType() == MARKUP_TYPE.TEXT &&
+	       last.skipSpace) {
 		last.text += element.text
 		last.skipSpace = element.skipSpace
 	    } else {
