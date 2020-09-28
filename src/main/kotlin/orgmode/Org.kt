@@ -45,7 +45,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
 }
 
 enum class MARKUP_TYPE {
-    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT
+    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT, LINK
 }
 
 class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
@@ -58,6 +58,46 @@ class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
     override fun equals(other: Any?): Boolean {
 	if(other !is Paragraph) return false
 	return super.equals(other)
+    }
+
+}
+class Link(url: String, entities: List<MarkupText> = emptyList(), other: MarkupText? = null): MarkupText(entities, other) {
+
+    val url: String = url
+    
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.LINK
+    
+    override fun toString(): String {
+	if(entities.isEmpty()) {
+	    return "[[$url]]"
+	} else {
+	    return "[[$url][${super.toString()}]]"
+	}
+    }
+    override fun toHtml(): String {
+	if(entities.isEmpty()) {
+	    return "<a href = \"$url\">$url</a>"
+	} else {
+	    return "<a href = \"$url\">${super.toHtml()}</a>"
+	}
+    }
+
+    override fun toJson(): String {
+	if(entities.isEmpty()) {
+	    return "{ \"type\": \"markup\", \"markup_type\": \"LINK\", \"url\": \"$url\"}"
+	} else {
+	    return "{ \"type\": \"markup\", \"markup_type\": \"LINK\", \"url\": \"$url\", \"elements\": [" + entities.foldIndexed("") {
+													     i, acc, e -> if(i == 0) acc + e.toJson() else acc + ", " + e.toJson()
+													 } + "] }"
+
+	}
+    }
+
+    override fun isEmpty(): Boolean = false
+
+    override fun equals(other: Any?): Boolean {
+	if(other !is Link) return false
+	return url == other.url && super.equals(other)
     }
 
 }

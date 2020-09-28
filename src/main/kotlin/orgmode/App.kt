@@ -5,22 +5,38 @@ package orgmode
 
 import java.io.File
 
+var timer: Long = System.nanoTime()
+
+fun tic() {
+    timer = System.nanoTime()
+}
+
+fun toc() {
+    println("Operation done in ${(System.nanoTime() - timer)/1000000} ms")
+}
+
+
 fun main(args: Array<String>) {
 
     var org: Org
+
+    tic()
     
     if(args.size > 0) {
 	org = OrgParser(FileSource(args[0])).parse()
     } else {
 
 	org = OrgParser(StringSource("""
-- C++
+[[https://iliayar.ru]test]
+[[https://iliayar.ru][*Home* /page/]]
 """)).parse()
     }
     
 
     println(org.toString())
     println(org.toJson())
+
+    toc()
 
     File("/tmp/kt.html").writeText(org.toHtml())
 }

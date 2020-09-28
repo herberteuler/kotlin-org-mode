@@ -5,16 +5,33 @@
 Trying kotlin \\
 Tool for org-mode
 
-** Parser [2/3]
+** Parser [3/6]
 - [X] Sections
 - [X] Lists
-- [-] Formated text
-  - [ ] Links
+- [X] Formated text
+  - [X] Links
   - [X] Bold
   - [X] Italic
   - [X] Code
   - [X] Strikeout
   - [X] Underline
+- [ ] Dates
+- [ ] Code blocks
+- [ ] Parameters
+  
+** Regex Parser [0/6]
+
+For testing regex perforamnce and more readable parser
+
+- [ ] Sections
+- [ ] Lists
+- [ ] Formated text
+  - [ ] Links
+  - [ ] Bold
+  - [ ] Italic
+  - [ ] Code
+  - [ ] Strikeout
+  - [ ] Underline
 - [ ] Dates
 - [ ] Code blocks
 - [ ] Parameters
