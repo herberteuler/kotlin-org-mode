@@ -240,7 +240,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                         }
                     }
                 } else {
-                    word += '['
+                     root.add(Text(word + '[', skipSpace = src.getChar() != ' '))
                 }
                 continue
             }

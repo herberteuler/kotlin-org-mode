@@ -21,17 +21,17 @@ fun main(args: Array<String>) {
     var org: Org
 
     tic()
-    
+
     if(args.size > 0) {
-	org = OrgParser(FileSource(args[0])).parse()
+	org = RegexOrgParser(FileSource(args[0])).parse()
     } else {
 
-	org = OrgParser(StringSource("""
-[[https://iliayar.ru]test]
-[[https://iliayar.ru][*Home* /page/]]
+	org = RegexOrgParser(StringSource("""
+Test *markup*
+Not *markup
+Text /with *inner*/ markup
 """)).parse()
     }
-    
 
     println(org.toString())
     println(org.toJson())

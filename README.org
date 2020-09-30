@@ -18,22 +18,22 @@ Tool for org-mode
 - [ ] Dates
 - [ ] Code blocks
 - [ ] Parameters
-  
+
 ** Regex Parser [0/6]
 
 For testing regex perforamnce and more readable parser
 
 - [ ] Sections
 - [ ] Lists
-- [ ] Formated text
+- [-] Formated text
   - [ ] Links
-  - [ ] Bold
-  - [ ] Italic
-  - [ ] Code
-  - [ ] Strikeout
-  - [ ] Underline
+  - [X] Bold
+  - [X] Italic
+  - [X] Code
+  - [X] Strikeout
+  - [X] Underline
 - [ ] Dates
 - [ ] Code blocks
 - [ ] Parameters
-  
+
 ** TODO Tools
