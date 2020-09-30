@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertEquals
 
-class AppTest {
+class OrgParserTest {
     // @Test fun testAppHasAGreeting() {
     //     val classUnderTest = App()
     //     assertNotNull(classUnderTest.greeting, "app should have a greeting")
@@ -18,45 +18,45 @@ class AppTest {
     }
 
     @Test fun testParseText() {
-	
+
 	val org: Org = parseMarkup("Test")
 
 	val res: Org = MarkupText(listOf(Text("Test")))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testParseTextWords() {
-	
+
 	val org: Org = parseMarkup("Test Text")
 
 	val res: Org = MarkupText(listOf(Text("Test"), Text("Text")))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testParseTextLines() {
-	
+
 	val org: Org = OrgParser(StringSource("""Test Text
 Second Line
 """)).parse()
 
 	val res: Org = Document(listOf(Paragraph(listOf(MarkupText(listOf(Text("Test"), Text("Text"))), MarkupText(listOf(Text("Second"), Text("Line")))))))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testParseMarkupEmphasis() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 *test* \\
 ***not header
@@ -81,15 +81,15 @@ Second Line
 			))
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testParseMarkupStrikeout() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 +test+ \\
 +not list
@@ -117,10 +117,10 @@ Second Line
 			))
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
@@ -147,10 +147,10 @@ ${c}test
 			    ))
 		    ))
 	    ))
-	    
+
 	    println(org.toJson())
 	    println(res.toJson())
-	    
+
 	    assertEquals(org, res)
 	}
     }
@@ -183,10 +183,10 @@ test =code=
 			    ))
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
     @Test fun testParseMarkupLink() {
@@ -208,14 +208,14 @@ test =code=
 			))
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
     @Test fun testParseSections() {
-	
+
 	val org: Org = OrgParser(StringSource("""* Test1
 ** Test 2
 * Test 3
@@ -229,15 +229,15 @@ test =code=
 		Section(parseMarkup("Test 3"), 1, emptyList())
 	    )
 	)
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testParseSectionsWithText() {
-	
+
 	val org: Org = OrgParser(StringSource("""* Test1
 Text 1
 ** Test 2
@@ -262,10 +262,10 @@ Text 3
 		Section(parseMarkup("Test 3"), 1, emptyList())
 	    )
 	)
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
@@ -290,16 +290,16 @@ Another line
 		))
 	    )
 	)
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
 
     }
-    
+
     @Test fun testList() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 * Unordered List
 - elem 1
@@ -333,22 +333,22 @@ Another line
 		))
 
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testListWithContent() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 * List
 - elem 1
   Text
 Not in list
 - elem 2
-  
+
   Another Text
 
   Still in list
@@ -396,15 +396,15 @@ Not in list
 			    ))
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testTwoEmptyLinesBreaksAllLists() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 * List
 - elem 1
@@ -448,15 +448,15 @@ Not in list
 
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 
     @Test fun testIndentBreaksAllLists() {
-	
+
 	val org: Org = OrgParser(StringSource("""
 * List
 - elem 1
@@ -498,10 +498,10 @@ Text
 
 		))
 	))
-	
+
 	println(org.toJson())
 	println(res.toJson())
-	
+
 	assertEquals(org, res)
     }
 }

@@ -27,9 +27,9 @@ fun main(args: Array<String>) {
     } else {
 
 	org = RegexOrgParser(StringSource("""
-Test *markup*
-Not *markup
-Text /with *inner*/ markup
+=*test*= \\
+=test \\
+test =code=
 """)).parse()
     }
 
