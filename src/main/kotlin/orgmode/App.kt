@@ -16,15 +16,10 @@ fun main(args: Array<String>) {
         org = RegexOrgParser(
             StringSource(
                 """
-* Unordered List
-- elem 1
-
-- elem 2
-
-* Ordered List
-
-1. elem 1
-2. elem 2
+#+BEGIN_SRC
+test
+code
+#+END_SRC
 """
             )
         ).parse()

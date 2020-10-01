@@ -5,9 +5,10 @@
 Trying kotlin \\
 Tool for org-mode
 
-Need for tests for performance \\
-Test two files and result is *draw*
 ** Parser [3/6]
+
+Works much more slower than regex phh...
+
 - [X] Sections
 - [X] Lists
 - [X] Formated text
@@ -21,9 +22,7 @@ Test two files and result is *draw*
 - [ ] Code blocks
 - [ ] Parameters
 
-** Regex Parser [3/6]
-
-For testing regex perforamnce and more readable parser
+** Regex Parser [4/6]
 
 - [X] Sections
 - [X] Lists
@@ -35,7 +34,7 @@ For testing regex perforamnce and more readable parser
   - [X] Strikeout
   - [X] Underline
 - [ ] Dates
-- [ ] Code blocks
+- [X] Code blocks
 - [ ] Parameters
 
 ** TODO Tools

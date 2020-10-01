@@ -4,15 +4,17 @@ package orgmode
 
 class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
-    val linkRegex: Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
-    val emphasisRegex: Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
-    val strikeoutRegex: Regex = """(.*)(^|\s)(\+([^ ].+[^ ]|[^ ])\+)(\s|$)(.*(\n)?)""".toRegex()
-    val underlineRegex: Regex = """(.*)(^|\s)(\_([^ ].+[^ ]|[^ ])\_)(\s|$)(.*(\n)?)""".toRegex()
-    val codeRegex: Regex = """(.*)(^|\s)(\=([^ ].+[^ ]|[^ ])\=)(\s|$)(.*(\n)?)""".toRegex()
-    val italicRegex: Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
-    val textRegex: Regex = """(.*)(\n)?""".toRegex()
-    val sectionRegex: Regex = """^(\*+) (.+(\n)?)""".toRegex()
-    val listRegex: Regex = """^(\s*)(\+|-|[0-9]+[\.\)]) (.+(\n)?)""".toRegex()
+    val linkRegex:           Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
+    val emphasisRegex:       Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
+    val strikeoutRegex:      Regex = """(.*)(^|\s)(\+([^ ].+[^ ]|[^ ])\+)(\s|$)(.*(\n)?)""".toRegex()
+    val underlineRegex:      Regex = """(.*)(^|\s)(\_([^ ].+[^ ]|[^ ])\_)(\s|$)(.*(\n)?)""".toRegex()
+    val codeRegex:           Regex = """(.*)(^|\s)(\=([^ ].+[^ ]|[^ ])\=)(\s|$)(.*(\n)?)""".toRegex()
+    val italicRegex:         Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
+    val textRegex:           Regex = """(.*)(\n)?""".toRegex()
+    val sectionRegex:        Regex = """^(\*+) (.+(\n)?)""".toRegex()
+    val listRegex:           Regex = """^(\s*)(\+|-|[0-9]+[\.\)]) (.+(\n)?)""".toRegex()
+    val codeBlockBeginRegex: Regex = """^(\s*)#\+BEGIN_SRC(.*(\n)?)?""".toRegex(RegexOption.IGNORE_CASE)
+    val codeBlockEndRegex:   Regex = """^(\s*)#\+END_SRC(\n|$)""".toRegex(RegexOption.IGNORE_CASE)
 
     var buffer: String? = null
 
@@ -72,6 +74,18 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 line = newLine
                 indent = newIndent
                 skip = true
+            } else if(line is CodeBlock) {
+                if (!paragraph.isEmpty()) section.add(paragraph)
+                paragraph = Paragraph()
+                while(true) {
+                    var codeLine = getLine()
+                    if(codeBlockEndRegex.matches(codeLine)) {
+                        break
+                    }
+                    line.add(codeLine)
+                    if(src.isEof()) throw ParserException("Code block without end")
+                }
+                section.add(line)
             }
         }
         if (!paragraph.isEmpty()) {
@@ -145,6 +159,18 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 } else {
                     paragraph.add(line)
                 }
+            } else if(line is CodeBlock) {
+                if (!paragraph.isEmpty()) entry.add(paragraph)
+                paragraph = Paragraph()
+                while(!src.isEof()) {
+                    var codeLine = getLine()
+                    if(codeBlockEndRegex.matches(codeLine)) {
+                        break
+                    }
+                    line.add(codeLine)
+                }
+                entry.add(line)
+                if(src.isEof()) throw ParserException("Code block without end")
             }
         }
         if (!paragraph.isEmpty()) entry.add(paragraph)
@@ -161,6 +187,10 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         match = listRegex.matchEntire(line)
         if (match != null) {
             return ListEntry(MarkupText(parseMarkup(match.groups[3]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0)
+        }
+        match = codeBlockBeginRegex.matchEntire(line)
+        if(match != null) {
+            return CodeBlock();
         }
 
         return MarkupText(parseMarkup(line))

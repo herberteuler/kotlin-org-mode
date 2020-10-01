@@ -426,3 +426,23 @@ class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0,
         return other.text == this.text && super.equals(other)
     }
 }
+
+class CodeBlock(var lines: List<String> = listOf()): Org(listOf()) {
+
+    override fun toJson(): String = "{ \"type\": \"code_block\", \"lines\": [${lines.foldIndexed("") {i, acc, e -> acc + (if(i != 0) ", \"" else "") + e + "\""}}]}"
+    override fun toHtml(): String = "<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"
+    override fun toString(): String = "#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"
+    override fun equals(other: Any?): Boolean {
+        if(other !is CodeBlock) return false
+        if(lines.size != other.lines.size) return false
+        for(i in lines.indices) {
+            if(lines[i] != other.lines[i]) return false
+        }
+        return true
+    }
+
+    fun add(line: String) {
+        lines += line
+    }
+
+}
