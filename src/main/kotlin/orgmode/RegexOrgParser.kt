@@ -172,15 +172,11 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     fun parseMarkup(s: String): List<MarkupText> {
 
-        println("Parsing string ${s}")
-
         for((regex, getMarkup) in regexToMarkup) {
             var match: MatchResult? = regex.matchEntire(s)
             if(match != null) {
-                println("Found match ${regex.toString()}")
                 return getMarkup(match)
             }
-                println("Trying regex ${regex.toString()}")
         }
 
         throw ParserException("Not found any matched group")
