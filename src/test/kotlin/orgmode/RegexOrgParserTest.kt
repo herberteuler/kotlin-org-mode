@@ -184,4 +184,29 @@ test =code=
 
 	assertEquals(org, res)
     }
+    @Test fun testParseMarkupLink() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+[[https://iliayar.ru]]
+[[http://iliayar.ru][*Home* /page/]]
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Paragraph(
+		    listOf(
+			Link("https://iliayar.ru"),
+			Link("http://iliayar.ru",
+			    listOf(
+				Emphasis(listOf(Text("Home"))),
+				Italic(listOf(Text("page")))
+			))
+		))
+	))
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
 }

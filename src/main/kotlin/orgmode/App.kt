@@ -27,11 +27,7 @@ fun main(args: Array<String>) {
     } else {
 
 	org = RegexOrgParser(StringSource("""
-=*test*= \\
-=test \\
-test =code=
-test [[https://iliayar.ru]] without text
-Test [[https://iliayar.ru][Link]] with text
+/italic/
 """)).parse()
     }
 
