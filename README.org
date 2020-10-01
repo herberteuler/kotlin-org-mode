@@ -5,6 +5,8 @@
 Trying kotlin \\
 Tool for org-mode
 
+Need for tests for performance \\
+Test two files and result is *draw*
 ** Parser [3/6]
 - [X] Sections
 - [X] Lists
