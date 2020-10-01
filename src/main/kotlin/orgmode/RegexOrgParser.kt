@@ -12,6 +12,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     val italicRegex: Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
     val textRegex: Regex = """(.*)(\n)?""".toRegex()
     val sectionRegex: Regex = """^(\*+) (.+(\n)?)""".toRegex()
+    val listRegex: Regex = """^(\s*)(\+|-|[0-9]+[\.\)]) (.+(\n)?)""".toRegex()
 
     var buffer: String? = null
 
@@ -28,9 +29,19 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     fun parseSection(section: Section): Section? {
         var paragraph: Paragraph = Paragraph()
+        var skip: Boolean = false
+        var line: Org? = null
+        var indent: Int? = null
         while(!src.isEof()) {
-            var indent: Int = skipWhitespaces()
-            var line = parseLine(getLine())
+            if(!skip) {
+                indent = skipWhitespaces()
+                line = parseLine(" ".repeat(indent) + getLine())
+            }
+            skip = false
+
+            indent ?: throw ParserException("Wrong skip")
+            line   ?: throw ParserException("Wrong skip")
+
             if(line is MarkupText) {
                 if(!line.isEmpty()) {
                     paragraph.add(line)
@@ -51,6 +62,18 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                     }
                     return nextSection
                 }
+            } else if(line is ListEntry) {
+                if(!paragraph.isEmpty()) section.add(paragraph)
+                paragraph = Paragraph()
+                var list = OrgList()
+                val (newLine, newIndent) = parseList(list, line, indent)
+                section.add(list)
+                if(newLine == null) {
+                    continue
+                }
+                line = newLine
+                indent = newIndent
+                skip = true
             }
         }
         if(!paragraph.isEmpty()) {
@@ -59,10 +82,88 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         return null
     }
 
+    fun parseList(list: OrgList, firstEntry: ListEntry, curIndent: Int): Pair<Org?, Int> {
+
+        var paragraph: Paragraph = Paragraph()
+        var entry = firstEntry
+        var skip: Boolean = false
+        var line: Org? = null
+        var indent: Int? = null
+        var emptyLines: Int = 0
+
+        while(!src.isEof()) {
+
+            if(!skip) {
+                indent = skipWhitespaces()
+                line = parseLine(" ".repeat(indent) + getLine())
+            }
+
+            skip = false
+
+            indent ?: throw ParserException("Wrong skip")
+            line   ?: throw ParserException("Wrong skip")
+
+            if(line is Section) {
+                if(!paragraph.isEmpty()) entry.add(paragraph)
+                list.add(entry)
+                return Pair(line, 0)
+            } else if(line is ListEntry) {
+                if(!paragraph.isEmpty()) entry.add(paragraph)
+                paragraph = Paragraph()
+                if(indent < curIndent) {
+                    list.add(entry)
+                    return Pair(line, indent)
+                } else if(indent == curIndent){
+                    list.add(entry)
+                    entry = line
+                } else {
+                    var newList = OrgList()
+                    val (nextLine, newIndent) = parseList(newList, line, indent)
+                    entry.add(newList)
+                    if(nextLine == null) {
+                        list.add(entry)
+                        return Pair(null, 0)
+                    }
+                    line = nextLine
+                    indent = newIndent
+                    skip = true
+                }
+
+            } else if(line is MarkupText) {
+                if(line.isEmpty()) {
+                    if(!paragraph.isEmpty()) entry.add(paragraph)
+                    paragraph = Paragraph()
+                    emptyLines++
+                    if(emptyLines >= 2) {
+                        list.add(entry)
+                        return Pair(null, 0)
+                    }
+                    continue
+                }
+                emptyLines = 0
+                if(indent <= curIndent) {
+                    if(!paragraph.isEmpty()) entry.add(paragraph)
+                    list.add(entry)
+                    return Pair(line, indent)
+                } else {
+                    paragraph.add(line)
+                }
+            }
+        }
+        if(!paragraph.isEmpty()) entry.add(paragraph)
+        list.add(entry)
+
+        return Pair(null, 0)
+    }
+
     fun parseLine(line: String): Org {
         var match: MatchResult? = sectionRegex.matchEntire(line)
         if(match != null) {
             return Section(MarkupText(parseMarkup(match.groups[2]!!.value)), match.groups[1]!!.value.length)
+        }
+        match = listRegex.matchEntire(line)
+        if(match != null) {
+            return ListEntry(MarkupText(parseMarkup(match.groups[3]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0)
         }
 
         return MarkupText(parseMarkup(line))

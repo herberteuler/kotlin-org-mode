@@ -245,8 +245,9 @@ open class Text(text: String, skipSpace: Boolean = false): MarkupText() {
 
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.TEXT
 
-    var text: String = text
+    var text: String = text.trim()
         get
+
 
     override fun toString(): String = text
     override fun toJson(): String = "\"" + text + "\""
@@ -330,7 +331,7 @@ class Document(entities: List<Org> = emptyList()) : Section(Text(""), 0, entitie
     }
 }
 
-class OrgList(entries: List<ListEntry>): Org(emptyList()) {
+class OrgList(entries: List<ListEntry> = listOf()): Org(listOf()) {
 
     var entries: List<ListEntry> = entries
 
@@ -346,6 +347,8 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
         if(entries[0].bullet[0] in '0'..'9') {
             if(entries[0].bullet[entries[0].bullet.length - 1] == '.') {
                 type = BULLET.NUM_DOT
+            } else if(entries[0].bullet[entries[0].bullet.length - 1] == ')') {
+                type = BULLET.NUM_PARENTHESIS
             } else throw ParserException("Unknow bullet type")
         } else if(entries[0].bullet[0] == '-') {
             type = BULLET.DASH
@@ -378,9 +381,10 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
     override fun toHtml(): String {
         val elements: String = entries.fold("") {acc, e -> acc + e.toHtml()}
         return when(type) {
-            BULLET.NUM_DOT -> "<ol>$elements</ol>"
-            BULLET.DASH -> "<ul>$elements</ul>"
-            BULLET.PLUS -> "<ul>$elements</ul>"
+            BULLET.NUM_DOT         -> "<ol>$elements</ol>"
+            BULLET.NUM_PARENTHESIS -> "<ol>$elements</ol>"
+            BULLET.DASH            -> "<ul>$elements</ul>"
+            BULLET.PLUS            -> "<ul>$elements</ul>"
             else -> throw OrgException("Unknown list type")
         }
     }
@@ -401,6 +405,7 @@ class OrgList(entries: List<ListEntry>): Org(emptyList()) {
     }
 
     public enum class BULLET {
+        NUM_PARENTHESIS,
 	    NUM_DOT,
 	    DASH,
 	    PLUS,

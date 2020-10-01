@@ -292,4 +292,210 @@ Another line
 	assertEquals(org, res)
 
     }
+    @Test fun testList() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+* Unordered List
+- elem 1
+
+- elem 2
+
+* Ordered List
+
+1. elem 1
+
+2. elem 2
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("Unordered List"), 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 1")),
+				    ListEntry(parseMarkup("elem 2"))
+			    ))
+		)),
+		Section(parseMarkup("Ordered List"), 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 1"), "1."),
+				    ListEntry(parseMarkup("elem 2"), "2.")
+			    ))
+		))
+
+	))
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
+
+    @Test fun testListWithContent() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+* List
+- elem 1
+  Text
+Not in list
+- elem 2
+
+  Another Text
+
+  Still in list
+
+
+         Not in list too
+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("List"), 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 1"), entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Text")
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    parseMarkup("Not in list")
+			    )),
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 2"), entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Another Text")
+						      )),
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Still in list")
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    parseMarkup("Not in list too")
+			    ))
+		))
+	))
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
+
+    @Test fun testTwoEmptyLinesBreaksAllLists() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+* List
+- elem 1
+  Text
+  - inner list
+    Inner list Text
+
+
+  Text
+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("List"), 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 1"), entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Text")
+						      )),
+						      OrgList(
+							  listOf(
+							      ListEntry(parseMarkup("inner list"), entities =
+									    listOf(
+										Paragraph(
+										    listOf(
+											parseMarkup("Inner list Text")
+										))
+							      ))
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    parseMarkup("Text")
+			    ))
+
+		))
+	))
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
+
+    @Test fun testIndentBreaksAllLists() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+* List
+- elem 1
+  Text
+  - inner list
+    Inner list Text
+Text
+
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("List"), 1,
+			listOf(
+			    OrgList(
+				listOf(
+				    ListEntry(parseMarkup("elem 1"), entities =
+						  listOf(
+						      Paragraph(
+							  listOf(
+							      parseMarkup("Text")
+						      )),
+						      OrgList(
+							  listOf(
+							      ListEntry(parseMarkup("inner list"), entities =
+									    listOf(
+										Paragraph(
+										    listOf(
+											parseMarkup("Inner list Text")
+										))
+							      ))
+						      ))
+				    ))
+			    )),
+			    Paragraph(
+				listOf(
+				    parseMarkup("Text")
+			    ))
+
+		))
+	))
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
 }

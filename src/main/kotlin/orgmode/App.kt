@@ -27,12 +27,15 @@ fun main(args: Array<String>) {
     } else {
 
 	org = RegexOrgParser(StringSource("""
-* Test
-Text 1
-** Section
-Text 2
-* Parser +markup+
-Text 3
+* Unordered List
+- elem 1
+
+- elem 2
+
+* Ordered List
+
+1. elem 1
+2. elem 2
 """)).parse()
     }
 
