@@ -12,9 +12,8 @@ fun tic() {
 }
 
 fun toc(msg: String) {
-    println("$msg done in ${(System.nanoTime() - timer)/1000000} ms")
+    println("$msg done in ${(System.nanoTime() - timer) / 1000000} ms")
 }
-
 
 fun main(args: Array<String>) {
 
@@ -22,11 +21,13 @@ fun main(args: Array<String>) {
 
     tic()
 
-    if(args.size > 0) {
-	org = RegexOrgParser(FileSource(args[0])).parse()
+    if (args.size > 0) {
+        org = RegexOrgParser(FileSource(args[0])).parse()
     } else {
 
-	org = RegexOrgParser(StringSource("""
+        org = RegexOrgParser(
+            StringSource(
+                """
 * Unordered List
 - elem 1
 
@@ -36,7 +37,9 @@ fun main(args: Array<String>) {
 
 1. elem 1
 2. elem 2
-""")).parse()
+"""
+            )
+        ).parse()
     }
 
     // println(org.toString())
@@ -67,5 +70,4 @@ fun main(args: Array<String>) {
 
 //     toc("Fucking ugly parser")
     File("/tmp/kt.html").writeText(org.toHtml())
-
 }

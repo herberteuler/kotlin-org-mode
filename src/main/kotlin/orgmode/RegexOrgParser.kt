@@ -23,52 +23,50 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         parseSection(doc)
 
         return doc
-
     }
-
 
     fun parseSection(section: Section): Section? {
         var paragraph: Paragraph = Paragraph()
         var skip: Boolean = false
         var line: Org? = null
         var indent: Int? = null
-        while(!src.isEof()) {
-            if(!skip) {
+        while (!src.isEof()) {
+            if (!skip) {
                 indent = skipWhitespaces()
                 line = parseLine(" ".repeat(indent) + getLine())
             }
             skip = false
 
             indent ?: throw ParserException("Wrong skip")
-            line   ?: throw ParserException("Wrong skip")
+            line ?: throw ParserException("Wrong skip")
 
-            if(line is MarkupText) {
-                if(!line.isEmpty()) {
+            if (line is MarkupText) {
+                if (!line.isEmpty()) {
                     paragraph.add(line)
-                } else if(!paragraph.isEmpty()) {
+                } else if (!paragraph.isEmpty()) {
                     section.add(paragraph)
                     paragraph = Paragraph()
                 }
-            } else if(line is Section) {
-                if(!paragraph.isEmpty()) section.add(paragraph)
-                if(line.level <= section.level) {
+            } else if (line is Section) {
+                if (!paragraph.isEmpty()) section.add(paragraph)
+                if (line.level <= section.level) {
                     return line
                 } else {
                     var nextSection: Section? = line
-                    while(nextSection != null && nextSection.level > section.level) {
+                    while (nextSection != null && nextSection.level > section.level) {
                         var tempSection: Section? = parseSection(nextSection)
                         section.add(nextSection)
                         nextSection = tempSection
                     }
                     return nextSection
                 }
-            } else if(line is ListEntry) {
-                if(!paragraph.isEmpty()) section.add(paragraph)
+            } else if (line is ListEntry) {
+                if (!paragraph.isEmpty()) section.add(paragraph)
                 paragraph = Paragraph()
                 var list = OrgList()
                 val (newLine, newIndent) = parseList(list, line, indent)
                 section.add(list)
-                if(newLine == null) {
+                if (newLine == null) {
                     continue
                 }
                 line = newLine
@@ -76,7 +74,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 skip = true
             }
         }
-        if(!paragraph.isEmpty()) {
+        if (!paragraph.isEmpty()) {
             section.add(paragraph)
         }
         return null
@@ -91,9 +89,9 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         var indent: Int? = null
         var emptyLines: Int = 0
 
-        while(!src.isEof()) {
+        while (!src.isEof()) {
 
-            if(!skip) {
+            if (!skip) {
                 indent = skipWhitespaces()
                 line = parseLine(" ".repeat(indent) + getLine())
             }
@@ -101,26 +99,26 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             skip = false
 
             indent ?: throw ParserException("Wrong skip")
-            line   ?: throw ParserException("Wrong skip")
+            line ?: throw ParserException("Wrong skip")
 
-            if(line is Section) {
-                if(!paragraph.isEmpty()) entry.add(paragraph)
+            if (line is Section) {
+                if (!paragraph.isEmpty()) entry.add(paragraph)
                 list.add(entry)
                 return Pair(line, 0)
-            } else if(line is ListEntry) {
-                if(!paragraph.isEmpty()) entry.add(paragraph)
+            } else if (line is ListEntry) {
+                if (!paragraph.isEmpty()) entry.add(paragraph)
                 paragraph = Paragraph()
-                if(indent < curIndent) {
+                if (indent < curIndent) {
                     list.add(entry)
                     return Pair(line, indent)
-                } else if(indent == curIndent){
+                } else if (indent == curIndent) {
                     list.add(entry)
                     entry = line
                 } else {
                     var newList = OrgList()
                     val (nextLine, newIndent) = parseList(newList, line, indent)
                     entry.add(newList)
-                    if(nextLine == null) {
+                    if (nextLine == null) {
                         list.add(entry)
                         return Pair(null, 0)
                     }
@@ -128,21 +126,20 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                     indent = newIndent
                     skip = true
                 }
-
-            } else if(line is MarkupText) {
-                if(line.isEmpty()) {
-                    if(!paragraph.isEmpty()) entry.add(paragraph)
+            } else if (line is MarkupText) {
+                if (line.isEmpty()) {
+                    if (!paragraph.isEmpty()) entry.add(paragraph)
                     paragraph = Paragraph()
                     emptyLines++
-                    if(emptyLines >= 2) {
+                    if (emptyLines >= 2) {
                         list.add(entry)
                         return Pair(null, 0)
                     }
                     continue
                 }
                 emptyLines = 0
-                if(indent <= curIndent) {
-                    if(!paragraph.isEmpty()) entry.add(paragraph)
+                if (indent <= curIndent) {
+                    if (!paragraph.isEmpty()) entry.add(paragraph)
                     list.add(entry)
                     return Pair(line, indent)
                 } else {
@@ -150,7 +147,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 }
             }
         }
-        if(!paragraph.isEmpty()) entry.add(paragraph)
+        if (!paragraph.isEmpty()) entry.add(paragraph)
         list.add(entry)
 
         return Pair(null, 0)
@@ -158,26 +155,25 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     fun parseLine(line: String): Org {
         var match: MatchResult? = sectionRegex.matchEntire(line)
-        if(match != null) {
+        if (match != null) {
             return Section(MarkupText(parseMarkup(match.groups[2]!!.value)), match.groups[1]!!.value.length)
         }
         match = listRegex.matchEntire(line)
-        if(match != null) {
+        if (match != null) {
             return ListEntry(MarkupText(parseMarkup(match.groups[3]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0)
         }
 
         return MarkupText(parseMarkup(line))
-
     }
 
     fun parseNextMarkup(head: String, markup: MarkupText, rest: String): List<MarkupText> {
         var res: List<MarkupText> = listOf()
 
-        if(head != "") {
+        if (head != "") {
             res += parseMarkup(head)
         }
         res += markup
-        if(rest != "") {
+        if (rest != "") {
             res += parseMarkup(rest)
         }
         return res
@@ -186,31 +182,31 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun generalMarkup(ctor: (List<MarkupText>, MarkupText?) -> MarkupText): (MatchResult) -> List<MarkupText> {
         return {
             match ->
-                var res: List<MarkupText> = listOf()
-                if(match.groups[1] != null && match.groups[1]!!.value != "") {
-                    res += parseMarkup(match.groups[1]!!.value)
-                }
-                res += ctor(parseMarkup(match.groups[4]!!.value), null)
-                if(match.groups[6] != null && match.groups[6]!!.value != "") {
-                    res += parseMarkup(match.groups[6]!!.value)
-                }
-                res
+            var res: List<MarkupText> = listOf()
+            if (match.groups[1] != null && match.groups[1]!!.value != "") {
+                res += parseMarkup(match.groups[1]!!.value)
+            }
+            res += ctor(parseMarkup(match.groups[4]!!.value), null)
+            if (match.groups[6] != null && match.groups[6]!!.value != "") {
+                res += parseMarkup(match.groups[6]!!.value)
+            }
+            res
         }
     }
 
     val regexToMarkup: Map<Regex, (MatchResult) -> List<MarkupText>> = mapOf(
         linkRegex to {
             match ->
-                var res: List<MarkupText> = listOf()
-            if(match.groups[1]!!.value != "") {
+            var res: List<MarkupText> = listOf()
+            if (match.groups[1]!!.value != "") {
                 res += parseMarkup(match.groups[1]!!.value)
             }
-            if(match.groups[5] != null) {
+            if (match.groups[5] != null) {
                 res += Link(match.groups[3]!!.value, parseMarkup(match.groups[5]!!.value))
             } else {
                 res += Link(match.groups[3]!!.value)
             }
-            if(match.groups[6]!!.value != "") {
+            if (match.groups[6]!!.value != "") {
                 res += parseMarkup(match.groups[6]!!.value)
             }
             res
@@ -221,39 +217,37 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         underlineRegex to generalMarkup(::Underline),
         codeRegex to {
             match ->
-                var res: List<MarkupText> = listOf()
-                if(match.groups[1] != null && match.groups[1]!!.value != "") {
-                    res += parseMarkup(match.groups[1]!!.value)
-                }
-                res += Code(match.groups[4]!!.value)
-                if(match.groups[6] != null && match.groups[6]!!.value != "") {
-                    res += parseMarkup(match.groups[6]!!.value)
-                }
-                res
+            var res: List<MarkupText> = listOf()
+            if (match.groups[1] != null && match.groups[1]!!.value != "") {
+                res += parseMarkup(match.groups[1]!!.value)
+            }
+            res += Code(match.groups[4]!!.value)
+            if (match.groups[6] != null && match.groups[6]!!.value != "") {
+                res += parseMarkup(match.groups[6]!!.value)
+            }
+            res
         },
         textRegex to {
             match ->
-                var res: List<MarkupText> = listOf()
-                if(match.groups[1]!!.value != "") {
-                    res += Text(match.groups[1]!!.value)
-                }
-                if(match.groups[2] != null) {
-                    res += LineBreak()
-                }
-                res
+            var res: List<MarkupText> = listOf()
+            if (match.groups[1]!!.value != "") {
+                res += Text(match.groups[1]!!.value)
+            }
+            if (match.groups[2] != null) {
+                res += LineBreak()
+            }
+            res
         }
     )
-
-
 
     fun getLine(): String {
         var res: String = ""
 
-        while(!test('\n') && !src.isEof()) {
-            if(test('\\')) {
-                if(test('\\')) {
-                    if(test('\n')) {
-                        if(res == "") break
+        while (!test('\n') && !src.isEof()) {
+            if (test('\\')) {
+                if (test('\\')) {
+                    if (test('\n')) {
+                        if (res == "") break
                         res += "\n"
                         break
                     }
@@ -273,15 +267,13 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     fun parseMarkup(s: String): List<MarkupText> {
 
-        for((regex, getMarkup) in regexToMarkup) {
+        for ((regex, getMarkup) in regexToMarkup) {
             var match: MatchResult? = regex.matchEntire(s)
-            if(match != null) {
+            if (match != null) {
                 return getMarkup(match)
             }
         }
 
         throw ParserException("Not found any matched group")
-
     }
-
 }

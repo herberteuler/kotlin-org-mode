@@ -13,24 +13,23 @@ open class StringSource : Source {
 
     private var src: String
     private var index: Int
-    
+
     constructor(src: String) {
-	this.src = src
-	this.index = 0
+        this.src = src
+        this.index = 0
     }
 
     override fun isEof(): Boolean {
-	return index >= src.length
+        return index >= src.length
     }
-    
+
     override fun getChar(): Char {
-	return if (!isEof()) src[index] else '\u0000'
+        return if (!isEof()) src[index] else '\u0000'
     }
 
-    override fun nextChar(): Unit {
-	index++
+    override fun nextChar() {
+        index++
     }
-
 }
 
 class FileSource(file: String) : StringSource(File(file).readText())

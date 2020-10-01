@@ -223,7 +223,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                             } else {
                                 stack.pop()
                                 test(']')
-                                if(test(']')) {
+                                if (test(']')) {
                                     root.add(Link(url, other = link_text))
                                 } else {
                                     root.add(Text("[[", skipSpace = true))
@@ -240,7 +240,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                         }
                     }
                 } else {
-                     root.add(Text(word + '[', skipSpace = src.getChar() != ' '))
+                    root.add(Text(word + '[', skipSpace = src.getChar() != ' '))
                 }
                 continue
             }

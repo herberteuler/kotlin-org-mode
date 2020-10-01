@@ -21,12 +21,12 @@ Test two files and result is *draw*
 - [ ] Code blocks
 - [ ] Parameters
 
-** Regex Parser [2/6]
+** Regex Parser [3/6]
 
 For testing regex perforamnce and more readable parser
 
 - [X] Sections
-- [ ] Lists
+- [X] Lists
 - [X] Formated text
   - [X] Links
   - [X] Bold
