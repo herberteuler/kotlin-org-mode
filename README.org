@@ -22,10 +22,14 @@ Works much more slower than regex phh...
 - [ ] Code blocks
 - [ ] Parameters
 
-** Regex Parser [4/6]
+** Regex Parser [2/6]
 
-- [X] Sections
-- [X] Lists
+- [-] Sections
+  - [X] Simple sections
+  - [ ] TODOs words
+- [-] Lists
+  - [X] Ordered/Unordered lists
+  - [ ] Checkboxes
 - [X] Formated text
   - [X] Links
   - [X] Bold
