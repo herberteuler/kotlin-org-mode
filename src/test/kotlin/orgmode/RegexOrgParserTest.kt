@@ -13,6 +13,9 @@ class RegexOrgParserTest {
     //     assertNotNull(classUnderTest.greeting, "app should have a greeting")
     // }
 
+    val DEBUG: Boolean = false
+
+    @Suppress("UNCHECKED_CAST")
     fun parseMarkup(s: String): MarkupText {
         return MarkupText(RegexOrgParser(StringSource(s)).parse().entities[0].entities as List<MarkupText>)
     }
@@ -24,8 +27,8 @@ class RegexOrgParserTest {
 
         val res: Org = MarkupText(listOf(Text("Test")))
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -36,8 +39,8 @@ class RegexOrgParserTest {
 
         val res: Org = MarkupText(listOf(Text("Test Text")))
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -54,8 +57,8 @@ Second Line
 
         val res: Org = Document(listOf(Paragraph(listOf(MarkupText(listOf(Text("Test Text"))), MarkupText(listOf(Text("Second Line")))))))
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -93,8 +96,8 @@ Second Line
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -132,8 +135,8 @@ Second Line
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -170,8 +173,8 @@ ${c}test
                 )
             )
 
-            println(org.toJson())
-            println(res.toJson())
+            if(DEBUG) println(org.toJson())
+            if(DEBUG) println(res.toJson())
 
             assertEquals(org, res)
         }
@@ -215,8 +218,8 @@ test =code=
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -248,8 +251,8 @@ test =code=
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -276,8 +279,8 @@ test =code=
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -323,8 +326,8 @@ Text 3
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -359,8 +362,8 @@ Another line
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -411,8 +414,8 @@ Another line
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -494,8 +497,8 @@ Not in list
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -564,8 +567,8 @@ Not in list
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }
@@ -632,8 +635,8 @@ Text
             )
         )
 
-        println(org.toJson())
-        println(res.toJson())
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
 
         assertEquals(org, res)
     }

@@ -225,9 +225,13 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
         }
         val last: Org = entities[entities.size - 1]
         if (element is Text && last is Text && element.getMarkupType() == MARKUP_TYPE.TEXT &&
-            last.getMarkupType() == MARKUP_TYPE.TEXT && last.skipSpace
+            last.getMarkupType() == MARKUP_TYPE.TEXT
         ) {
-            last.text += element.text
+            if(last.skipSpace) {
+                last.text += element.text
+            } else {
+                last.text += " " + element.text
+            }
             last.skipSpace = element.skipSpace
         } else {
             entities += element
