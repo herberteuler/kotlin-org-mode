@@ -30,6 +30,8 @@ fun main(args: Array<String>) {
 =*test*= \\
 =test \\
 test =code=
+test [[https://iliayar.ru]] without text
+Test [[https://iliayar.ru][Link]] with text
 """)).parse()
     }
 

@@ -4,8 +4,8 @@ package orgmode
 
 class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
-    val markupRegex: Regex = """((.*)((^|\s)((\*([^ ].*[^ ]|[^ ])\*)|(\+([^ ].*[^ ]|[^ ])\+)|(\_([^ ].*[^ ]|[^ ])\_)|(\=([^ ].*[^ ]|[^ ])\=)|(\/([^ ].*[^ ]|[^ ])\/))(\s|$))(.*)|(.*))(\n)?""".toRegex()
-    //                          (1(2)(3(4  )(5(6(7 empahsis     )  ) (8 (9 strikeout    )  ) (10(11 underline   )  ) (12(13 code        )  ) (14(15 italic      )  ))(16  ))(17) (18))(19)
+    val markupRegex: Regex = """((.*)((^|\s)((\*([^ ].*[^ ]|[^ ])\*)|(\+([^ ].*[^ ]|[^ ])\+)|(\_([^ ].*[^ ]|[^ ])\_)|(\=([^ ].*[^ ]|[^ ])\=)|(\/([^ ].*[^ ]|[^ ])\/)|(\[\[([^\]]*)\](\[(.*)\])?\]))(\s|$))(.*)|(.*))(\n)?""".toRegex()
+    //                          (1(2)(3(4  )(5(6(7 empahsis     )  ) (8 (9 strikeout    )  ) (10(11 underline   )  ) (12(13 code        )  ) (14(15 italic      )  ) (16  (17   )   (18(19)  )   ))(20  ))(21) (22))(23)
 
     override fun parse(): Org {
 
@@ -47,7 +47,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         return res
     }
 
-    val meaningfulGroups: List<Int> = listOf(7, 9, 11, 13, 15, 18)
+    val meaningfulGroups: List<Int> = listOf(7, 9, 11, 13, 15, 17, 22)
 
     fun getMatchedMarkup(markup: MarkupText, match: MatchResult): List<MarkupText> {
         var res: List<MarkupText> = listOf()
@@ -56,10 +56,10 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 res += Text(groups[2]!!.value)
             }
             res += markup
-            if(groups[17]!!.value != "") {
-                res += parseMarkup(groups[17]!!.value)
+            if(groups[21]!!.value != "") {
+                res += parseMarkup(groups[21]!!.value)
             }
-            if(groups[19] != null) {
+            if(groups[23] != null) {
                 res += LineBreak()
             }
         }
@@ -69,12 +69,13 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun groupToMarkup(groupId: Int, match: MatchResult): List<MarkupText> {
         with(match) {
             return when(groupId) {
-                7 -> getMatchedMarkup(Emphasis(parseMarkup(groups[7]!!.value)), match)
-                9 -> getMatchedMarkup(Strikeout(parseMarkup(groups[9]!!.value)), match)
-                11 -> getMatchedMarkup(Underline(parseMarkup(groups[11]!!.value)), match)
-                13 -> getMatchedMarkup(Code(groups[13]!!.value), match)
-                15 -> getMatchedMarkup(Italic(parseMarkup(groups[15]!!.value)), match)
-                18 -> if(groups[18]!!.value != "") listOf(Text(groups[groupId]!!.value)) + (if(groups[19] != null) listOf(LineBreak()) else listOf()) else listOf()
+                7 -> getMatchedMarkup(Emphasis(parseMarkup(groups[groupId]!!.value)), match)
+                9 -> getMatchedMarkup(Strikeout(parseMarkup(groups[groupId]!!.value)), match)
+                11 -> getMatchedMarkup(Underline(parseMarkup(groups[groupId]!!.value)), match)
+                13 -> getMatchedMarkup(Code(groups[groupId]!!.value), match)
+                15 -> getMatchedMarkup(Italic(parseMarkup(groups[groupId]!!.value)), match)
+                17 -> getMatchedMarkup(if(groups[18] != null) Link(groups[groupId]!!.value, parseMarkup(groups[19]!!.value)) else Link(groups[groupId]!!.value), match)
+                22 -> if(groups[groupId]!!.value != "") listOf(Text(groups[groupId]!!.value)) + (if(groups[23] != null) listOf(LineBreak()) else listOf()) else listOf()
                 else -> throw ParserException("Unknown group id passed to groupToMarkup")
             }
         }
