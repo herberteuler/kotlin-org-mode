@@ -27,7 +27,12 @@ fun main(args: Array<String>) {
     } else {
 
 	org = RegexOrgParser(StringSource("""
-/italic/
+* Test
+Text 1
+** Section
+Text 2
+* Parser +markup+
+Text 3
 """)).parse()
     }
 

@@ -209,4 +209,87 @@ test =code=
 
 	assertEquals(org, res)
     }
+    @Test fun testParseSections() {
+
+	val org: Org = RegexOrgParser(StringSource("""* Test1
+** Test 2
+* Test 3
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("Test1"), 1, listOf(
+			    Section(parseMarkup("Test 2"), 2, emptyList())
+		)),
+		Section(parseMarkup("Test 3"), 1, emptyList())
+	    )
+	)
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
+
+    @Test fun testParseSectionsWithText() {
+
+	val org: Org = RegexOrgParser(StringSource("""* Test1
+Text 1
+** Test 2
+Text 2
+Text 3
+* Test 3
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("Test1"), 1, listOf(
+			    Paragraph(listOf(
+					  parseMarkup("Text 1")
+			    )),
+			    Section(parseMarkup("Test 2"), 2, listOf(
+					Paragraph(listOf(
+						      parseMarkup("Text 2"),
+						      parseMarkup("Text 3")
+					))
+			    ))
+		)),
+		Section(parseMarkup("Test 3"), 1, emptyList())
+	    )
+	)
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+    }
+
+
+    @Test fun testMulitline() {
+
+	val org: Org = RegexOrgParser(StringSource("""
+* Doc
+Text 1
+Same line\\
+Another line
+""")).parse()
+
+	val res: Org = Document(
+	    listOf(
+		Section(parseMarkup("Doc"), 1, listOf(
+			    Paragraph(listOf(
+					  parseMarkup("Text 1"),
+					  parseMarkup("Same line\\\\\n"),
+					  parseMarkup("Another line")
+			    ))
+		))
+	    )
+	)
+
+	println(org.toJson())
+	println(res.toJson())
+
+	assertEquals(org, res)
+
+    }
 }

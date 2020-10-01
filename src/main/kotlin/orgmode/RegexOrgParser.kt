@@ -11,6 +11,63 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     val codeRegex: Regex = """(.*)(^|\s)(\=([^ ].+[^ ]|[^ ])\=)(\s|$)(.*(\n)?)""".toRegex()
     val italicRegex: Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
     val textRegex: Regex = """(.*)(\n)?""".toRegex()
+    val sectionRegex: Regex = """^(\*+) (.+(\n)?)""".toRegex()
+
+    var buffer: String? = null
+
+    override fun parse(): Org {
+
+        var doc: Document = Document()
+
+        parseSection(doc)
+
+        return doc
+
+    }
+
+
+    fun parseSection(section: Section): Section? {
+        var paragraph: Paragraph = Paragraph()
+        while(!src.isEof()) {
+            var indent: Int = skipWhitespaces()
+            var line = parseLine(getLine())
+            if(line is MarkupText) {
+                if(!line.isEmpty()) {
+                    paragraph.add(line)
+                } else if(!paragraph.isEmpty()) {
+                    section.add(paragraph)
+                    paragraph = Paragraph()
+                }
+            } else if(line is Section) {
+                if(!paragraph.isEmpty()) section.add(paragraph)
+                if(line.level <= section.level) {
+                    return line
+                } else {
+                    var nextSection: Section? = line
+                    while(nextSection != null && nextSection.level > section.level) {
+                        var tempSection: Section? = parseSection(nextSection)
+                        section.add(nextSection)
+                        nextSection = tempSection
+                    }
+                    return nextSection
+                }
+            }
+        }
+        if(!paragraph.isEmpty()) {
+            section.add(paragraph)
+        }
+        return null
+    }
+
+    fun parseLine(line: String): Org {
+        var match: MatchResult? = sectionRegex.matchEntire(line)
+        if(match != null) {
+            return Section(MarkupText(parseMarkup(match.groups[2]!!.value)), match.groups[1]!!.value.length)
+        }
+
+        return MarkupText(parseMarkup(line))
+
+    }
 
     fun parseNextMarkup(head: String, markup: MarkupText, rest: String): List<MarkupText> {
         var res: List<MarkupText> = listOf()
@@ -86,20 +143,6 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         }
     )
 
-
-    override fun parse(): Org {
-
-        var temp: MarkupText = Paragraph()
-
-        while(!src.isEof()) {
-            val parsedMarkup: MarkupText = MarkupText(parseMarkup(getLine()))
-            if(!parsedMarkup.isEmpty()) {
-                temp.add(parsedMarkup)
-            }
-        }
-
-        return Document(listOf(temp))
-    }
 
 
     fun getLine(): String {

@@ -19,14 +19,14 @@ Tool for org-mode
 - [ ] Code blocks
 - [ ] Parameters
 
-** Regex Parser [0/6]
+** Regex Parser [2/6]
 
 For testing regex perforamnce and more readable parser
 
-- [ ] Sections
+- [X] Sections
 - [ ] Lists
-- [-] Formated text
-  - [ ] Links
+- [X] Formated text
+  - [X] Links
   - [X] Bold
   - [X] Italic
   - [X] Code
