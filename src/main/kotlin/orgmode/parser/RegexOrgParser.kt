@@ -246,15 +246,15 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         return MarkupText(parseMarkup(line))
     }
 
-    fun parseNextMarkup(head: String, markup: MarkupText, rest: String): List<MarkupText> {
+    fun parseNextMarkup(match: MatchResult, headId: Int, markup: MarkupText, restId: Int): List<MarkupText> {
         var res: List<MarkupText> = listOf()
 
-        if (head != "") {
-            res += parseMarkup(head)
+        if (match.groups[headId] != null && match.groups[headId]!!.value != "") {
+            res += parseMarkup(match.groups[headId]!!.value)
         }
         res += markup
-        if (rest != "") {
-            res += parseMarkup(rest)
+        if (match.groups[restId] != null && match.groups[restId]!!.value != "") {
+            res += parseMarkup(match.groups[restId]!!.value)
         }
         return res
     }
@@ -262,46 +262,24 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun generalMarkup(ctor: (List<MarkupText>, MarkupText?) -> MarkupText): (MatchResult) -> List<MarkupText> {
         return {
             match ->
-            var res: List<MarkupText> = listOf()
-            if (match.groups[1] != null && match.groups[1]!!.value != "") {
-                res += parseMarkup(match.groups[1]!!.value)
-            }
-            res += ctor(parseMarkup(match.groups[4]!!.value), null)
-            if (match.groups[6] != null && match.groups[6]!!.value != "") {
-                res += parseMarkup(match.groups[6]!!.value)
-            }
-            res
+            parseNextMarkup(match, 1, ctor(parseMarkup(match.groups[4]!!.value), null), 6)
         }
     }
 
     val regexToMarkup: Map<Regex, (MatchResult) -> List<MarkupText>> = mapOf(
         linkRegex to {
             match ->
-            var res: List<MarkupText> = listOf()
-            if (match.groups[1]!!.value != "") {
-                res += parseMarkup(match.groups[1]!!.value)
-            }
+            var link: Link
             if (match.groups[5] != null) {
-                res += Link(match.groups[3]!!.value, parseMarkup(match.groups[5]!!.value))
+                link = Link(match.groups[3]!!.value, parseMarkup(match.groups[5]!!.value))
             } else {
-                res += Link(match.groups[3]!!.value)
+                link = Link(match.groups[3]!!.value)
             }
-            if (match.groups[6]!!.value != "") {
-                res += parseMarkup(match.groups[6]!!.value)
-            }
-            res
+            parseNextMarkup(match, 1, link, 6)
         },
         statisticRegex to {
             match ->
-                var res: List<MarkupText> = listOf()
-            if(match.groups[1]!!.value != "") {
-                res += parseMarkup(match.groups[1]!!.value)
-            }
-            res += StatisticCookie(match.groups[2]!!.value)
-            if(match.groups[3]!!.value != "") {
-                res += parseMarkup(match.groups[3]!!.value)
-            }
-            res
+            parseNextMarkup(match, 1, StatisticCookie(match.groups[2]!!.value), 3)
         },
         italicRegex to generalMarkup(::Italic),
         emphasisRegex to generalMarkup(::Emphasis),
@@ -309,15 +287,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         underlineRegex to generalMarkup(::Underline),
         codeRegex to {
             match ->
-            var res: List<MarkupText> = listOf()
-            if (match.groups[1] != null && match.groups[1]!!.value != "") {
-                res += parseMarkup(match.groups[1]!!.value)
-            }
-            res += Code(match.groups[4]!!.value)
-            if (match.groups[6] != null && match.groups[6]!!.value != "") {
-                res += parseMarkup(match.groups[6]!!.value)
-            }
-            res
+            parseNextMarkup(match, 1, Code(match.groups[4]!!.value), 6)
         },
         textRegex to {
             match ->
@@ -358,10 +328,10 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     }
 
     fun parseMarkup(s: String): List<MarkupText> {
-
         for ((regex, getMarkup) in regexToMarkup) {
             var match: MatchResult? = regex.matchEntire(s)
             if (match != null) {
+                // if(match.groups[0]!!.value == "") return listOf()
                 return getMarkup(match)
             }
         }

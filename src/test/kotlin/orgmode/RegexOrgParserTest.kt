@@ -14,7 +14,7 @@ class RegexOrgParserTest {
     //     assertNotNull(classUnderTest.greeting, "app should have a greeting")
     // }
 
-    val DEBUG: Boolean = false
+    val DEBUG: Boolean = true
 
     @Suppress("UNCHECKED_CAST")
     fun parseMarkup(s: String): MarkupText {
@@ -631,6 +631,40 @@ Text
                             )
                         )
 
+                    )
+                )
+            )
+        )
+
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
+
+        assertEquals(org, res)
+    }
+    @Test fun testStatisticAndCheckboxesList() {
+
+        val org: Org = RegexOrgParser(
+            StringSource(
+                """
+* Unordered List [1/2][50%]
+- [ ] elem 1
+
+- [X] elem 2
+"""
+            )
+        ).parse()
+
+        val res: Org = Document(
+            listOf(
+                Section(
+                    MarkupText(listOf(Text("Unordered List "), StatisticCookie("[1/2]"), StatisticCookie("[50%]"))), 1,
+                    listOf(
+                        OrgList(
+                            listOf(
+                                ListEntry(parseMarkup("elem 1"), checkbox = LIST_CHECKBOX.UNCHECKED),
+                                ListEntry(parseMarkup("elem 2"), checkbox = LIST_CHECKBOX.CHECKED)
+                            )
+                        )
                     )
                 )
             )

@@ -41,6 +41,7 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
     }
 
     open fun add(element: Text): MarkupText = add(element as Org)
+    // open fun add(element: Text): MarkupText = if(element.isEmpty()) element else add(element as Org)
 
     open fun add(other: MarkupText): MarkupText {
         if (other.getMarkupType() == getMarkupType() || (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)) {
@@ -100,6 +101,7 @@ class StatisticCookie(text: String) : Text(text) {
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.STATISTIC_COOKIE
 
     override fun toHtml(): String = "<code>${text.htmlEscape()}</code>"
+    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"statistic\", \"text\": \"$text\"}"
 
     override fun equals(other: Any?): Boolean {
         if (other !is StatisticCookie) return false

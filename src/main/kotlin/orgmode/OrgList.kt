@@ -113,6 +113,6 @@ class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0,
 
     override fun equals(other: Any?): Boolean {
         if (other !is ListEntry) return false
-        return other.text == this.text && super.equals(other)
+        return other.text == this.text && checkbox == other.checkbox && super.equals(other)
     }
 }

@@ -26,7 +26,10 @@ enum class PLANNING_TYPE {
 }
 
 class Planning(var type: PLANNING_TYPE, var timestamp: String) {
-
+    override fun equals(other: Any?): Boolean {
+        if(other !is Planning) return false
+        return type == other.type && timestamp == other.timestamp
+    }
 }
 
 open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList(), var state: STATE = STATE.NONE) : Org(entities) {
@@ -67,7 +70,9 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
 
     override fun equals(other: Any?): Boolean {
         if (other !is Section) return false
-        return other.text == text && other.level == level && super.equals(other)
+        if((planning == null) != (other.planning == null)) return false
+        if(planning != null && !planning!!.equals(other.planning)) return false
+        return state == other.state && other.text == text && other.level == level && super.equals(other)
     }
 }
 
