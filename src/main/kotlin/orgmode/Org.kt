@@ -264,8 +264,12 @@ open class Text(text: String, skipSpace: Boolean = false) : MarkupText() {
 open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList()) : Org(entities) {
 
     var level: Int = level
-
     var text: MarkupText = text
+    var planning: Planning? = null
+
+    fun plan(planning: Planning) {
+        this.planning = planning
+    }
 
     override fun toString(): String {
         var prefix: String = "\n"
@@ -427,13 +431,10 @@ class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0,
     }
 }
 
-class CodeBlock(var lines: List<String> = listOf()): Org(listOf()) {
+abstract class Block(var lines: List<String> = listOf()): Org(listOf()) {
 
-    override fun toJson(): String = "{ \"type\": \"code_block\", \"lines\": [${lines.foldIndexed("") {i, acc, e -> acc + (if(i != 0) ", \"" else "") + e + "\""}}]}"
-    override fun toHtml(): String = "<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"
-    override fun toString(): String = "#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"
     override fun equals(other: Any?): Boolean {
-        if(other !is CodeBlock) return false
+        if(other !is Block) return false
         if(lines.size != other.lines.size) return false
         for(i in lines.indices) {
             if(lines[i] != other.lines[i]) return false
@@ -444,5 +445,19 @@ class CodeBlock(var lines: List<String> = listOf()): Org(listOf()) {
     fun add(line: String) {
         lines += line
     }
+
+}
+
+class CodeBlock(lines: List<String> = listOf()): Block(lines) {
+    override fun toJson(): String = "{ \"type\": \"code_block\", \"lines\": [${lines.foldIndexed("") {i, acc, e -> acc + (if(i != 0) ", \"" else "") + e + "\""}}]}"
+    override fun toHtml(): String = "<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"
+    override fun toString(): String = "#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"
+
+}
+enum class PLANNING_TYPE {
+    DEADLINE, SCHEDULED, CLOSED
+}
+
+class Planning(var type: PLANNING_TYPE, var timestamp: String) {
 
 }

@@ -23,9 +23,10 @@ Works much more slower than regex phh...
 - [ ] Parameters
 
 ** Regex Parser [2/6]
-
+[[https://orgmode.org/worg/dev/org-syntax.html][Org syntax]]
 - [-] Sections
   - [X] Simple sections
+  - [X] Planning
   - [ ] TODOs words
 - [-] Lists
   - [X] Ordered/Unordered lists

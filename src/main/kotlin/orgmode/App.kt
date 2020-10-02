@@ -16,6 +16,7 @@ fun main(args: Array<String>) {
         org = RegexOrgParser(
             StringSource(
                 """
+* Test blocks
 #+BEGIN_SRC
 test
 code
