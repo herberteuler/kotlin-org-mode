@@ -1,21 +1,25 @@
 
 
-package orgmode
+package orgmode.parser
+
+import orgmode.*
 
 class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
-    val linkRegex:       Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
-    val emphasisRegex:   Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
-    val strikeoutRegex:  Regex = """(.*)(^|\s)(\+([^ ].+[^ ]|[^ ])\+)(\s|$)(.*(\n)?)""".toRegex()
-    val underlineRegex:  Regex = """(.*)(^|\s)(\_([^ ].+[^ ]|[^ ])\_)(\s|$)(.*(\n)?)""".toRegex()
-    val codeRegex:       Regex = """(.*)(^|\s)(\=([^ ].+[^ ]|[^ ])\=)(\s|$)(.*(\n)?)""".toRegex()
-    val italicRegex:     Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
-    val textRegex:       Regex = """(.*)(\n)?""".toRegex()
-    val sectionRegex:    Regex = """^(\*+) (.+(\n)?)""".toRegex()
-    val listRegex:       Regex = """^(\s*)(\+|-|[0-9]+[\.\)]) (.+(\n)?)""".toRegex()
-    val blockBeginRegex: Regex = """^(\s*)#\+BEGIN_(SRC)(.*(\n)?)?""".toRegex(RegexOption.IGNORE_CASE)
-    val blockEndRegex:   Regex = """^(\s*)#\+END_(SRC)(\n|$)""".toRegex(RegexOption.IGNORE_CASE)
-    val planningRegex:   Regex = """^(DEADLINE|SCHEDULED|CLOSED): (.+)(\n)?""".toRegex()
+    val linkRegex:         Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
+    val emphasisRegex:     Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
+    val strikeoutRegex:    Regex = """(.*)(^|\s)(\+([^ ].+[^ ]|[^ ])\+)(\s|$)(.*(\n)?)""".toRegex()
+    val underlineRegex:    Regex = """(.*)(^|\s)(\_([^ ].+[^ ]|[^ ])\_)(\s|$)(.*(\n)?)""".toRegex()
+    val codeRegex:         Regex = """(.*)(^|\s)(\=([^ ].+[^ ]|[^ ])\=)(\s|$)(.*(\n)?)""".toRegex()
+    val italicRegex:       Regex = """(.*)(^|\s)(\/([^ ].+[^ ]|[^ ])\/)(\s|$)(.*(\n)?)""".toRegex()
+    val statisticRegex:    Regex = """(.*)(\[[0-9]*\/[0-9]*\]|\[[0-9]{0,2}%\])(.*(\n)?)""".toRegex()
+    val textRegex:         Regex = """(.*)(\n)?""".toRegex()
+    val sectionRegex:      Regex = """^(\*+) ((TODO|FIXME|DONE) )?(.+(\n)?)""".toRegex()
+    val checkboxListRegex: Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(\[([X \-])\](\s|$))(.*(\n)?)""".toRegex()
+    val listRegex:         Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(.*(\n)?)""".toRegex()
+    val blockBeginRegex:   Regex = """^(\s*)#\+BEGIN_(SRC)(.*(\n)?)?""".toRegex(RegexOption.IGNORE_CASE)
+    val blockEndRegex:     Regex = """^(\s*)#\+END_(SRC)(\n|$)""".toRegex(RegexOption.IGNORE_CASE)
+    val planningRegex:     Regex = """^(DEADLINE|SCHEDULED|CLOSED): (.+)(\n)?""".toRegex()
 
     var buffer: String? = null
 
@@ -42,7 +46,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         var skip: Boolean = false
         var line: Org? = null
         var indent: Int? = null
-        var rawLine: String = ""
+        var rawLine: String
 
         rawLine = getLine()
         var planning = planningRegex.matchEntire(rawLine)
@@ -207,7 +211,26 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun parseLine(line: String): Org {
         var match: MatchResult? = sectionRegex.matchEntire(line)
         if (match != null) {
-            return Section(MarkupText(parseMarkup(match.groups[2]!!.value)), match.groups[1]!!.value.length)
+            var state: STATE = STATE.NONE
+            if(match.groups[3] != null) {
+                state = when(match.groups[3]!!.value) {
+                    "TODO"  -> STATE.TODO
+                    "FIXME" -> STATE.FIXME
+                    "DONE"  -> STATE.DONE
+                    else    -> throw ParserException("Unknown state word")
+                }
+            }
+            return Section(MarkupText(parseMarkup(match.groups[4]!!.value)), match.groups[1]!!.value.length, state = state)
+        }
+        match = checkboxListRegex.matchEntire(line)
+        if (match != null) {
+            var state = when(match.groups[4]!!.value) {
+                    "X"  -> LIST_CHECKBOX.CHECKED
+                    "-"  -> LIST_CHECKBOX.PARTIAL_CHECKED
+                    " "  -> LIST_CHECKBOX.UNCHECKED
+                    else -> throw ParserException("Unknown list checked state")
+            }
+            return ListEntry(MarkupText(parseMarkup(match.groups[6]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0, checkbox = state)
         }
         match = listRegex.matchEntire(line)
         if (match != null) {
@@ -265,6 +288,18 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             }
             if (match.groups[6]!!.value != "") {
                 res += parseMarkup(match.groups[6]!!.value)
+            }
+            res
+        },
+        statisticRegex to {
+            match ->
+                var res: List<MarkupText> = listOf()
+            if(match.groups[1]!!.value != "") {
+                res += parseMarkup(match.groups[1]!!.value)
+            }
+            res += StatisticCookie(match.groups[2]!!.value)
+            if(match.groups[3]!!.value != "") {
+                res += parseMarkup(match.groups[3]!!.value)
             }
             res
         },

@@ -22,15 +22,15 @@ Works much more slower than regex phh...
 - [ ] Code blocks
 - [ ] Parameters
 
-** Regex Parser [2/6]
+** Regex Parser [4/6]
 [[https://orgmode.org/worg/dev/org-syntax.html][Org syntax]]
-- [-] Sections
+- [X] Sections
   - [X] Simple sections
   - [X] Planning
-  - [ ] TODOs words
-- [-] Lists
+  - [X] TODOs words
+- [X] Lists
   - [X] Ordered/Unordered lists
-  - [ ] Checkboxes
+  - [X] Checkboxes
 - [X] Formated text
   - [X] Links
   - [X] Bold
@@ -38,6 +38,7 @@ Works much more slower than regex phh...
   - [X] Code
   - [X] Strikeout
   - [X] Underline
+  - [X] Statistic Cookie
 - [ ] Dates
 - [X] Code blocks
 - [ ] Parameters

@@ -4,6 +4,7 @@
 package orgmode
 
 import java.io.File
+import orgmode.parser.*
 
 fun main(args: Array<String>) {
 
@@ -16,17 +17,24 @@ fun main(args: Array<String>) {
         org = RegexOrgParser(
             StringSource(
                 """
-* Test blocks
+* DONE Test blocks [1/2] [44%]
 #+BEGIN_SRC
 test
 code
 #+END_SRC
+
+1. [ ] Test
+2. [X] List
+3. Checkboxes
+4. [ ]
 """
             )
         ).parse()
     }
 
-    println(org.toString())
-    println(org.toJson())
+    if(args.size == 0) {
+        println(org.toString())
+        println(org.toJson())
+    }
     File("/tmp/kt.html").writeText(org.toHtml())
 }

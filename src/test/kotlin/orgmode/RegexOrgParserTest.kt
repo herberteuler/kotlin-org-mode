@@ -6,6 +6,7 @@ package orgmode
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import orgmode.parser.*
 
 class RegexOrgParserTest {
     // @Test fun testAppHasAGreeting() {

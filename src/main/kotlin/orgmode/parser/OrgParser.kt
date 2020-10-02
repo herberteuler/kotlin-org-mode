@@ -1,5 +1,7 @@
 
-package orgmode
+package orgmode.parser
+
+import orgmode.*
 
 class OrgParser(src: Source) : AbstractParser<Org>(src) {
 

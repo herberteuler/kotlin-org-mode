@@ -5,6 +5,7 @@ package orgmode
 
 import kotlin.random.Random
 import kotlin.test.Test
+import orgmode.parser.*
 
 class StressParserTest {
     var timer: Long = System.nanoTime()
