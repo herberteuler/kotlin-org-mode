@@ -18,6 +18,10 @@ fun main(args: Array<String>) {
             StringSource(
                 """
 * DONE Test blocks [1/2] [44%]
+CLOSED: [2020-02-02 Thue +1w]
+:PROPERTIES:
+:TAG: Test
+:END:
 #+BEGIN_SRC
 test
 code

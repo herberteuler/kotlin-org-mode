@@ -1,7 +1,7 @@
 package orgmode
 
 enum class MARKUP_TYPE {
-    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT, LINK, STATISTIC_COOKIE
+    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT, LINK, STATISTIC_COOKIE, KEYWORD
 }
 
 open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupText? = null) : Org() {
@@ -222,6 +222,17 @@ class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = nu
     override fun equals(other: Any?): Boolean {
         if (other !is Emphasis) return false
         return super.equals(other)
+    }
+}
+
+class Keyword(var key: String, var value: String): MarkupText(listOf(), null) {
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.KEYWORD
+    override fun toString(): String = "#+$key: $value"
+    override fun toJson(): String = "{\"type\": \"keyword\", \"key\": \"$key\", \"value\": \"$value\"}"
+    override fun toHtml(): String = ""
+    override fun equals(other: Any?): Boolean {
+        if(other !is Keyword) return false
+        return key == other.key && value == other.value
     }
 }
 

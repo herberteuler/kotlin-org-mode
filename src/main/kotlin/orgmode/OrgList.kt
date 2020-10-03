@@ -98,7 +98,7 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
     }
 }
 
-class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0, entities: List<Org> = emptyList(), var checkbox: LIST_CHECKBOX = LIST_CHECKBOX.NONE) : Org(entities) {
+class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0, entities: List<Org> = emptyList(), var checkbox: LIST_CHECKBOX = LIST_CHECKBOX.NONE, var counter: Int? = null) : Org(entities) {
 
     public val bullet: String = bullet
 

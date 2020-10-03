@@ -15,11 +15,17 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     val statisticRegex:    Regex = """(.*)(\[[0-9]*\/[0-9]*\]|\[[0-9]{0,2}%\])(.*(\n)?)""".toRegex()
     val textRegex:         Regex = """(.*)(\n)?""".toRegex()
     val sectionRegex:      Regex = """^(\*+) ((TODO|FIXME|DONE) )?(.+(\n)?)""".toRegex()
-    val checkboxListRegex: Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(\[([X \-])\](\s|$))(.*(\n)?)""".toRegex()
-    val listRegex:         Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(.*(\n)?)""".toRegex()
+    val checkboxListRegex: Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(\[@(\d+)\]\s+)?(\[([X \-])\](\s|$))(.*(\n)?)""".toRegex()
+    val listRegex:         Regex = """^(\s*)(\+|-|[0-9]+[\.\)])\s+(\[@(\d+)\]\s+)?(.*(\n)?)""".toRegex()
     val blockBeginRegex:   Regex = """^(\s*)#\+BEGIN_(SRC)(.*(\n)?)?""".toRegex(RegexOption.IGNORE_CASE)
     val blockEndRegex:     Regex = """^(\s*)#\+END_(SRC)(\n|$)""".toRegex(RegexOption.IGNORE_CASE)
-    val planningRegex:     Regex = """^(DEADLINE|SCHEDULED|CLOSED): (.+)(\n)?""".toRegex()
+    val planningRegex:     Regex = """^\s*(DEADLINE|SCHEDULED|CLOSED): (.+)(\n)?""".toRegex()
+    val propertyRegex:     Regex = """^:([^\s]+(\+)?):( (.+))?""".toRegex()
+    val keywordRegex:      Regex = """^#\+([^ ]+): (.*)""".toRegex()
+
+    val activeTimestampRegex:   Regex = """<(\d{4})-(\d{2})-(\d{2}) ([^\+>\]\-\n0-9]+)( ((\d{1,2}):(\d{2}))(-((\d{1,2}):(\d{2})))?)?( (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])){0,2}>(.*)""".toRegex()
+    val inactiveTimestampRegex: Regex = """\[(\d{4})-(\d{2})-(\d{2}) ([^\+>\]\-\n0-9]+)( ((\d{1,2}):(\d{2}))(-((\d{1,2}):(\d{2})))?)?( (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])){0,2}\](.*)""".toRegex()
+
 
     var buffer: String? = null
 
@@ -43,25 +49,53 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     fun parseSection(section: Section): Section? {
         var paragraph: Paragraph = Paragraph()
-        var skip: Boolean = false
-        var line: Org? = null
-        var indent: Int? = null
+        var skip: Boolean
+        var line: Org?
+        var indent: Int?
         var rawLine: String
 
         rawLine = getLine()
         var planning = planningRegex.matchEntire(rawLine)
-        if(planning != null) {
+        while(planning != null) {
+            var match: MatchResult? = activeTimestampRegex.matchEntire(planning.groups[2]!!.value)
+            var active: Boolean = true
+            if(match == null) {
+                active = false
+                match = inactiveTimestampRegex.matchEntire(planning.groups[2]!!.value)
+                if(match == null) throw ParserException("Wrong timestamp format: ${planning.groups[2]!!.value}")
+            }
             section.plan(Planning(when(planning.groups[1]!!.value) {
                              "DEADLINE"  -> PLANNING_TYPE.DEADLINE
                              "SCHEDULED" -> PLANNING_TYPE.SCHEDULED
                              "CLOSED"    -> PLANNING_TYPE.CLOSED
                              else -> throw ParserException("Unknown planning type")
-            }, planning.groups[2]!!.value))
-        } else {
-            skip = true
-            indent = getIndent(rawLine)
-            line = parseLine(rawLine)
+            }, parseTimestamp(match, active)))
+            planning = planningRegex.matchEntire(match.groups[17]!!.value)
+            if(planning != null) {
+                rawLine = match.groups[17]!!.value
+                continue
+            }
+            rawLine = getLine()
+            planning = planningRegex.matchEntire(rawLine)
         }
+        var propertyMatch = propertyRegex.matchEntire(rawLine)
+        while(propertyMatch != null) {
+            var property = Property(propertyMatch.groups[1]!!.value,
+                                    propertyMatch.groups[2] != null,
+                                    propertyMatch.groups[4]?.value
+            )
+            if(property.name == "END") {
+                rawLine = getLine()
+                break
+            }
+            if(src.isEof()) throw ParserException("Preporties has not END")
+            if(property.name != "PROPERTIES") section.addProperty(property)
+            rawLine = getLine()
+            propertyMatch = propertyRegex.matchEntire(rawLine)
+        }
+        skip = true
+        indent = getIndent(rawLine)
+        line = parseLine(rawLine)
 
         while (skip || !src.isEof()) {
             if (!skip) {
@@ -224,17 +258,28 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         }
         match = checkboxListRegex.matchEntire(line)
         if (match != null) {
-            var state = when(match.groups[4]!!.value) {
+            var state = when(match.groups[6]!!.value) {
                     "X"  -> LIST_CHECKBOX.CHECKED
                     "-"  -> LIST_CHECKBOX.PARTIAL_CHECKED
                     " "  -> LIST_CHECKBOX.UNCHECKED
                     else -> throw ParserException("Unknown list checked state")
             }
-            return ListEntry(MarkupText(parseMarkup(match.groups[6]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0, checkbox = state)
+            return ListEntry(MarkupText(parseMarkup(match.groups[8]?.value ?: "")),
+                             match.groups[2]!!.value,
+                             match.groups[1]?.value?.length ?: 0,
+                             checkbox = state,
+                             counter = match.groups[4]?.value?.toInt())
         }
         match = listRegex.matchEntire(line)
         if (match != null) {
-            return ListEntry(MarkupText(parseMarkup(match.groups[3]?.value ?: "")), match.groups[2]!!.value, match.groups[1]?.value?.length ?: 0)
+            return ListEntry(MarkupText(parseMarkup(match.groups[5]?.value ?: "")),
+                             match.groups[2]!!.value,
+                             match.groups[1]?.value?.length ?: 0,
+                             counter = match.groups[4]?.value?.toInt())
+        }
+        match = keywordRegex.matchEntire(line)
+        if(match != null) {
+            return Keyword(match.groups[1]!!.value, match.groups[2]!!.value)
         }
         match = blockBeginRegex.matchEntire(line)
         if(match != null) {
@@ -301,6 +346,23 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             res
         }
     )
+
+    fun parseTimestamp(match: MatchResult, active: Boolean): Timestamp {
+        return Timestamp(
+            active,
+            match.groups[1]!!.value.toInt(),
+            match.groups[2]!!.value.toInt(),
+            match.groups[3]!!.value.toInt(),
+            match.groups[4]!!.value,
+            match.groups[7]?.value?.toInt(),
+            match.groups[8]?.value?.toInt(),
+            match.groups[11]?.value?.toInt(),
+            match.groups[12]?.value?.toInt(),
+            match.groups[14]?.value,
+            match.groups[15]?.value?.toInt(),
+            match.groups[16]?.value?.get(0)
+        )
+    }
 
     fun getLine(): String {
         var res: StringBuilder = StringBuilder()
