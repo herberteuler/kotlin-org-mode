@@ -3,7 +3,9 @@
 [[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]]
 
 Trying kotlin \\
-Tool for org-mode
+Tool for org-mode \\
+
+Example of converting to html [[file:README.html][here]]
 
 ** Parser [3/6]
 

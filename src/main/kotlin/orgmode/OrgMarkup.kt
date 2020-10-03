@@ -24,10 +24,11 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
         i, acc, e ->
         if (i == 0 || (i > 0 && entities[i - 1] is LineBreak)) acc + e.toString() else acc + " " + e.toString()
     }
-    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"${getMarkupType()}\", \"elements\": [" + entities.foldIndexed("") {
+    override fun toJson(): String = """{ "type": "markup", "markup_type": "${getMarkupType()}", "elements": [${
+    entities.foldIndexed("") {
         i, acc, e ->
         if (i == 0) acc + e.toJson() else acc + ", " + e.toJson()
-    } + "] }"
+    }}] }"""
     override fun toHtml(): String = entities.foldIndexed("") {
         i, acc, e ->
         if (i == 0) acc + e.toHtml() else acc + " " + e.toHtml()
@@ -41,10 +42,11 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
     }
 
     open fun add(element: Text): MarkupText = add(element as Org)
-    // open fun add(element: Text): MarkupText = if(element.isEmpty()) element else add(element as Org)
 
     open fun add(other: MarkupText): MarkupText {
-        if (other.getMarkupType() == getMarkupType() || (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)) {
+        if (other.getMarkupType() == getMarkupType() ||
+            (getMarkupType() == MARKUP_TYPE.PARAGRAPH && other.getMarkupType() == MARKUP_TYPE.REGULAR)
+        ) {
             for (e in other.entities) {
                 add(e)
             }
@@ -101,7 +103,7 @@ class StatisticCookie(text: String) : Text(text) {
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.STATISTIC_COOKIE
 
     override fun toHtml(): String = "<code>${text.htmlEscape()}</code>"
-    override fun toJson(): String = "{ \"type\": \"markup\", \"markup_type\": \"statistic\", \"text\": \"$text\"}"
+    override fun toJson(): String = """{ "type": "markup", "markup_type": "statistic", "text": "$text"}"""
 
     override fun equals(other: Any?): Boolean {
         if (other !is StatisticCookie) return false
@@ -138,20 +140,20 @@ class Link(url: String, entities: List<MarkupText> = emptyList(), other: MarkupT
     }
     override fun toHtml(): String {
         if (entities.isEmpty()) {
-            return "<a href = \"$url\">$url</a>"
+            return """<img src = "$url" />"""
         } else {
-            return "<a href = \"$url\">${super.toHtml()}</a>"
+            return """<a href = "$url">${super.toHtml()}</a>"""
         }
     }
 
     override fun toJson(): String {
         if (entities.isEmpty()) {
-            return "{ \"type\": \"markup\", \"markup_type\": \"LINK\", \"url\": \"$url\"}"
+            return """{ "type": "markup", "markup_type": "LINK", "url": "$url"}"""
         } else {
-            return "{ \"type\": \"markup\", \"markup_type\": \"LINK\", \"url\": \"$url\", \"elements\": [" + entities.foldIndexed("") {
+            return """{ "type": "markup", "markup_type": "LINK", "url": "$url", "elements": [${entities.foldIndexed("") {
                 i, acc, e ->
                 if (i == 0) acc + e.toJson() else acc + ", " + e.toJson()
-            } + "] }"
+            }}] }"""
         }
     }
 
@@ -168,7 +170,7 @@ class Code(text: String) : Text(text, false) {
 
     override fun toString(): String = "=${this.text}="
     override fun toHtml(): String = "<code>${this.text.htmlEscape()}</code>"
-    override fun toJson(): String = "{\"type\": \"markup\", \"markup_type\": \"CODE\", \"code\": ${super.toJson()}}"
+    override fun toJson(): String = """{"type": "markup", "markup_type": "CODE", "code": ${super.toJson()}}"""
 
     override fun equals(other: Any?): Boolean {
         if (other !is Code) return false
@@ -225,20 +227,20 @@ class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = nu
     }
 }
 
-class Keyword(var key: String, var value: String): MarkupText(listOf(), null) {
+class Keyword(var key: String, var value: String) : MarkupText(listOf(), null) {
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.KEYWORD
     override fun toString(): String = "#+$key: $value"
-    override fun toJson(): String = "{\"type\": \"keyword\", \"key\": \"$key\", \"value\": \"$value\"}"
+    override fun toJson(): String = """{"type": "keyword", "key": "$key", "value": "$value"}"""
     override fun toHtml(): String = ""
     override fun equals(other: Any?): Boolean {
-        if(other !is Keyword) return false
+        if (other !is Keyword) return false
         return key == other.key && value == other.value
     }
 }
 
 class LineBreak() : Text("\n") {
     override fun toHtml(): String = "</br>"
-    override fun toJson(): String = "{\"type\": \"line_break\"}"
+    override fun toJson(): String = """{"type": "line_break"}"""
 
     override fun isEmpty(): Boolean = true
 }

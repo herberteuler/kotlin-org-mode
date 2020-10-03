@@ -1,14 +1,15 @@
+
 package orgmode
 
 enum class LIST_CHECKBOX {
     CHECKED {
-        override fun toHtml(): String = "<input type=\"checkbox\" checked disabled>"
+        override fun toHtml(): String = """<input type="checkbox" checked disabled>"""
     },
     UNCHECKED {
-        override fun toHtml(): String = "<input type=\"checkbox\" disabled>"
+        override fun toHtml(): String = """<input type="checkbox" disabled>"""
     },
     PARTIAL_CHECKED {
-        override fun toHtml(): String = "<input type=\"checkbox\" disabled>"
+        override fun toHtml(): String = """<input type="checkbox" disabled>"""
     },
     NONE {
         override fun toHtml(): String = ""
@@ -52,16 +53,12 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
     }
 
     override fun toJson(): String {
-        var ents: String = ""
-
-        for (i in entries.indices) {
-            if (i != 0) {
-                ents += ", "
-            }
-            ents += entries[i].toJson()
+        return """{ "type": "list", "list_type": "$type", "entries": [${
+        entries.foldIndexed("") {
+            i, acc, e ->
+            if (i != 0) acc + ", " + e.toJson() else e.toJson()
         }
-
-        return "{ \"type\": \"list\", \"list_type\": \"${type}\", \"entries\": [$ents] }"
+        }] }"""
     }
     override fun toHtml(): String {
         val elements: String = entries.fold("") { acc, e -> acc + e.toHtml() }
@@ -74,7 +71,7 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
         }
     }
     override fun toString(): String {
-        return entries.fold("") { acc, e -> acc + '\n' + e.toString() } + "\n"
+        return entries.fold("") { acc, e -> acc + '\n' + e.toString() } + '\n'
     }
 
     override fun equals(other: Any?): Boolean {
@@ -98,17 +95,26 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
     }
 }
 
-class ListEntry(val text: MarkupText, bullet: String = "-", val indent: Int = 0, entities: List<Org> = emptyList(), var checkbox: LIST_CHECKBOX = LIST_CHECKBOX.NONE, var counter: Int? = null) : Org(entities) {
+class ListEntry(
+    val text: MarkupText,
+    bullet: String = "-",
+    val indent: Int = 0,
+    entities: List<Org> = emptyList(),
+    var checkbox: LIST_CHECKBOX = LIST_CHECKBOX.NONE,
+    var counter: Int? = null
+) : Org(entities) {
 
     public val bullet: String = bullet
 
-    override fun toJson(): String = "{ \"type\": \"list_entry\", \"text\": ${text.toJson()}, \"entities\": [${super.toJson()}]}"
+    override fun toJson(): String = """{ "type": "list_entry", "text": ${text.toJson()}, "entities": [${super.toJson()}]}"""
     override fun toHtml(): String {
-        return "<li>${if(checkbox != LIST_CHECKBOX.NONE) " " + checkbox.toHtml() + " " else ""}${text.toHtml()}</br>${super.toHtml()}</li>"
+        return """<li>${
+        if (checkbox != LIST_CHECKBOX.NONE) " " + checkbox.toHtml() + " " else ""
+        }${text.toHtml()}</br>${super.toHtml()}</li>"""
     }
     override fun toString(): String {
-        var prefix: String = " ".repeat(indent)
-        return "$prefix$bullet ${text.toString()}\n" + entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
+        return "${" ".repeat(indent)}$bullet ${text.toString()}\n" +
+        entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
     }
 
     override fun equals(other: Any?): Boolean {

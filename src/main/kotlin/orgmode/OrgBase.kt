@@ -29,29 +29,20 @@ abstract class Org(entities: List<Org> = emptyList()) {
         return true
     }
 
-    open fun toJson(): String {
-        var res: String = ""
-
-        for (i in entities.indices) {
-            if (i != 0) {
-                res += ", "
-            }
-            res += entities[i].toJson()
-        }
-
-        return res
+    open fun toJson(): String = entities.foldIndexed("") {
+        i, acc, e ->
+        if (i != 0) acc + ", " + e.toJson() else e.toJson()
     }
     open fun toHtml(): String = entities.fold("") { acc, e -> acc + e.toHtml() }
 }
 
-
-abstract class Block(var lines: List<String> = listOf()): Org(listOf()) {
+abstract class Block(var lines: List<String> = listOf()) : Org(listOf()) {
 
     override fun equals(other: Any?): Boolean {
-        if(other !is Block) return false
-        if(lines.size != other.lines.size) return false
-        for(i in lines.indices) {
-            if(lines[i] != other.lines[i]) return false
+        if (other !is Block) return false
+        if (lines.size != other.lines.size) return false
+        for (i in lines.indices) {
+            if (lines[i] != other.lines[i]) return false
         }
         return true
     }
@@ -59,12 +50,12 @@ abstract class Block(var lines: List<String> = listOf()): Org(listOf()) {
     fun add(line: String) {
         lines += line
     }
-
 }
 
-class CodeBlock(lines: List<String> = listOf()): Block(lines) {
-    override fun toJson(): String = "{ \"type\": \"code_block\", \"lines\": [${lines.foldIndexed("") {i, acc, e -> acc + (if(i != 0) ", \"" else "") + e + "\""}}]}"
-    override fun toHtml(): String = "<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"
-    override fun toString(): String = "#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"
-
+class CodeBlock(lines: List<String> = listOf()) : Block(lines) {
+    override fun toJson(): String = """{ "type": "code_block", "lines": [${
+    lines.foldIndexed("") {i, acc, e -> acc + (if (i != 0) ", \"" else "") + e + '"'}
+    }]}"""
+    override fun toHtml(): String = """<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"""
+    override fun toString(): String = """#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"""
 }

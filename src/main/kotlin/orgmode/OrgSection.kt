@@ -1,3 +1,4 @@
+
 package orgmode
 
 enum class STATE {
@@ -14,7 +15,7 @@ enum class STATE {
         override fun getColor(): String = throw OrgException("Trying get color of NONE state")
     };
     fun toHtml(): String {
-        return "<span style=\"color:${getColor()}\">${toString()}</span>"
+        return """<code style="color:${getColor()}">${toString()}</code>"""
     }
 
     abstract fun getColor(): String
@@ -37,8 +38,8 @@ enum class PLANNING_TYPE {
 
 class Planning(var type: PLANNING_TYPE, var timestamp: Timestamp) {
 
-    fun toJson(): String = "{ \"type\": \"$type\", \"timestamp\": ${timestamp.toJson()}}"
-    fun toHtml(): String = "<code style=\"background:${type.getHtmlColor()}\">$timestamp</code>"
+    fun toJson(): String = """{ "type": "$type", "timestamp": ${timestamp.toJson()}}"""
+    fun toHtml(): String = """<code style="background:${type.getHtmlColor()}">$timestamp</code>"""
 
     override fun equals(other: Any?): Boolean {
         if(other !is Planning) return false
@@ -48,22 +49,33 @@ class Planning(var type: PLANNING_TYPE, var timestamp: Timestamp) {
 
 class Property(var name: String, var plus: Boolean, var value: String?)
 
-class Timestamp(var active: Boolean, var year: Int, var month: Int, var day: Int, var dayname: String, var hour: Int? = null, var minutes: Int? = null, var endHour: Int? = null, var endMinutes: Int? = null, var repeatOrDelayMark: String? = null, var repeatOrDelayValue: Int? = null, var repeatOrDelayUnit: Char? = null) {
+class Timestamp(var active: Boolean,
+                var year: Int,
+                var month: Int,
+                var day: Int,
+                var dayname: String,
+                var hour: Int? = null,
+                var minutes: Int? = null,
+                var endHour: Int? = null,
+                var endMinutes: Int? = null,
+                var repeatOrDelayMark: String? = null,
+                var repeatOrDelayValue: Int? = null,
+                var repeatOrDelayUnit: Char? = null) {
 
     fun toJson(): String {
-        var res: String = "\"active\": $active, \"year\": $year, \"month\": $month, \"day\": $day, \"dayname\": \"$dayname\""
+        var res: String = """ "active": $active, "year": $year, "month": $month, "day": $day, "dayname": "$dayname" """
         if(hour != null && minutes != null) {
-            res += ", \"time\": \"$hour:$minutes\""
+            res += """, "time": "$hour:$minutes" """
         }
         if(endHour != null && endMinutes != null) {
-            res += ", \"end_time\": \"$endHour:$endMinutes\""
+            res += """, "end_time": "$endHour:$endMinutes" """
         }
         if(repeatOrDelayMark != null &&
            repeatOrDelayValue != null &&
            repeatOrDelayUnit != null) {
-            res += ", \"repeat_or_delay\": \"$repeatOrDelayMark$repeatOrDelayValue$repeatOrDelayUnit\""
+            res += """, "repeat_or_delay": "$repeatOrDelayMark$repeatOrDelayValue$repeatOrDelayUnit" """
         }
-        return "{ $res }"
+        return "{$res}"
     }
 
     override fun toString(): String {
@@ -104,13 +116,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
     }
 
     override fun toString(): String {
-        var prefix: String = "\n"
-
-        for (i in 1..level) {
-            prefix += '*'
-        }
-
-        return "$prefix ${text.toString()}\n${super.toString()}"
+        return "\n${"*".repeat(level)} ${text.toString()}\n${super.toString()}"
     }
 
     override fun toJson(): String {
@@ -126,7 +132,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
             planningJson = "[ ${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + ", " + e.toJson() else e.toJson()}} ]"
         }
 
-        return "{ \"type\": \"section\", \"header\": ${text.toJson()}, \"level\": $level, \"state\": \"$state\", \"planning\": $planningJson, \"elements\": [$elements] }"
+        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state", "planning": $planningJson, "elements": [$elements] }"""
     }
 
     override fun toHtml(): String {
@@ -136,7 +142,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
         if(!planning.isEmpty()) {
             planningHtml = "${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + "</br>" + e.toHtml() else e.toHtml()}}"
         }
-        return "<h$level>${if(state != STATE.NONE) state.toHtml() + " " else ""}${text.toHtml()}</h$level>$planningHtml$innerHtml"
+        return "<h$level>${if(state != STATE.NONE) state.toHtml() + " " else ""}${text.toHtml()}</h$level><hr>$planningHtml$innerHtml"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -163,7 +169,7 @@ class Document(entities: List<Org> = emptyList()) : Section(Text(""), 0, entitie
             elements += entities[i].toJson()
         }
 
-        return "{ \"type\": \"document\", \"elements\": [$elements] }"
+        return """{ "type": "document", "elements": [$elements] }"""
     }
 
     override fun toHtml(): String {
