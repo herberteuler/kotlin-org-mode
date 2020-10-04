@@ -98,6 +98,23 @@ class Timestamp(var active: Boolean,
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if(other !is Timestamp) return false
+        if(other.active != active) return false
+        if(other.year != year) return false
+        if(other.month != month) return false
+        if(other.day != day) return false
+        if(other.dayname != dayname) return false
+        if(other.hour != hour) return false
+        if(other.minutes != minutes) return false
+        if(other.endHour != endHour) return false
+        if(other.endMinutes != endMinutes) return false
+        if(other.repeatOrDelayMark != repeatOrDelayMark) return false
+        if(other.repeatOrDelayValue != repeatOrDelayValue) return false
+        if(other.repeatOrDelayUnit != repeatOrDelayUnit) return false
+        return true
+    }
+
 }
 
 open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList(), var state: STATE = STATE.NONE) : Org(entities) {
