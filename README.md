@@ -1,12 +1,14 @@
 
 # Kotlin org mode
 ![Badge](https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg)  \
- Trying kotlin \
- Tool for org-mode \
- Example of converting to html [here](README.html)  \
- Example of converting to markdown [here](README.md) (Actually this file) 
+Trying kotlin \
+Tool for org-mode \
+Example of converting to html [here](README.html)  \
+Example of converting to markdown [here](README.md) (Actually this file)
+
 ## Parser `[3/6]`
-Works much more slower than regex phh... - [X] Sections
+Works much more slower than regex phh...
+- [X] Sections
 - [X] Lists
 - [X] Formated text
     - [X] Links
@@ -18,9 +20,10 @@ Works much more slower than regex phh... - [X] Sections
 - [ ] Dates
 - [ ] Code blocks
 - [ ] Parameters
- 
+
 ## Regex Parser `[6/6]`
-[Org syntax](https://orgmode.org/worg/dev/org-syntax.html) - [X] Sections
+[Org syntax](https://orgmode.org/worg/dev/org-syntax.html)
+- [X] Sections
     - [X] Simple sections
   - [X] Planning
   - [X] TODOs words
@@ -39,7 +42,7 @@ Works much more slower than regex phh... - [X] Sections
 - [X] Code blocks
 - [X] Parameters
 - [ ] Tables?
- 
+
 ## Tools
 
 ### Converts to `[3/3]`

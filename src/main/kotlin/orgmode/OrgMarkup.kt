@@ -1,7 +1,7 @@
 package orgmode
 
 enum class MARKUP_TYPE {
-    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT, LINK, STATISTIC_COOKIE, KEYWORD
+    REGULAR, EMPHASIS, PARAGRAPH, CODE, UNDERLINE, STRIKEOUT, ITALIC, TEXT, LINK, STATISTIC_COOKIE, KEYWORD, LINE_BREAK
 }
 
 open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupText? = null) : Org() {
@@ -22,11 +22,11 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 
     override fun toString(): String = entities.foldIndexed("") {
         i, acc, e ->
-        if (i == 0) acc + e.toString() else acc + " " + e.toString()
+        if (i == 0 || (i > 0 && entities[i - 1] is LineBreak)) acc + e.toString() else acc + " " + e.toString()
     }
     override fun toMarkdown(): String = entities.foldIndexed("") {
         i, acc, e ->
-        if (i == 0) acc + e.toMarkdown() else acc + " " + e.toMarkdown()
+        if (i == 0 || (i > 0 && entities[i - 1] is LineBreak)) acc + e.toMarkdown() else acc + " " + e.toMarkdown()
     }
     override fun toJson(): String = """{ "type": "markup", "markup_type": "${getMarkupType()}", "elements": [${
     entities.foldIndexed("") {
@@ -69,14 +69,10 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
         if (element is Text && last is Text && element.getMarkupType() == MARKUP_TYPE.TEXT &&
             last.getMarkupType() == MARKUP_TYPE.TEXT
         ) {
-            if(element is LineBreak || last is LineBreak) {
-                entities += element
-                return this
-            }
             if (last.skipSpace) {
                 last.text += element.text
             } else {
-                entities += element
+                last.text += " " + element.text
             }
             last.skipSpace = element.skipSpace
         } else {
@@ -127,8 +123,8 @@ class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
 
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.PARAGRAPH
 
-    override fun toString(): String = "${super.toString()}"
-    override fun toMarkdown(): String = "${super.toMarkdown()}"
+    override fun toString(): String = "${super.toString()}\n"
+    override fun toMarkdown(): String = "${super.toMarkdown()}\n"
     override fun toHtml(): String = "<p>${super.toHtml()}</p>"
 
     override fun equals(other: Any?): Boolean {
@@ -272,6 +268,7 @@ class Keyword(var key: String, var value: String) : MarkupText(listOf(), null) {
 }
 
 class LineBreak() : Text("\n") {
+    override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.LINE_BREAK
     override fun toHtml(): String = "</br>"
     override fun toJson(): String = """{"type": "line_break"}"""
     override fun toString(): String = "\\\\\n"
