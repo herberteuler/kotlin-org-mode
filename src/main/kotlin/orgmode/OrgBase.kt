@@ -34,6 +34,8 @@ abstract class Org(entities: List<Org> = emptyList()) {
         if (i != 0) acc + ", " + e.toJson() else e.toJson()
     }
     open fun toHtml(): String = entities.fold("") { acc, e -> acc + e.toHtml() }
+
+    open fun toMarkdown(): String = entities.foldIndexed("") { i, acc, e -> if (i != 0) acc + ' ' + e else acc + e.toMarkdown()}
 }
 
 abstract class Block(var lines: List<String> = listOf()) : Org(listOf()) {
@@ -58,4 +60,5 @@ class CodeBlock(lines: List<String> = listOf()) : Block(lines) {
     }]}"""
     override fun toHtml(): String = """<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"""
     override fun toString(): String = """#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"""
+    override fun toMarkdown(): String = """```${'\n'}${lines.fold("") {acc, e -> acc + e + '\n'}}```"""
 }

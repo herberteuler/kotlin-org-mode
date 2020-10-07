@@ -22,7 +22,11 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
 
     override fun toString(): String = entities.foldIndexed("") {
         i, acc, e ->
-        if (i == 0 || (i > 0 && entities[i - 1] is LineBreak)) acc + e.toString() else acc + " " + e.toString()
+        if (i == 0) acc + e.toString() else acc + " " + e.toString()
+    }
+    override fun toMarkdown(): String = entities.foldIndexed("") {
+        i, acc, e ->
+        if (i == 0) acc + e.toMarkdown() else acc + " " + e.toMarkdown()
     }
     override fun toJson(): String = """{ "type": "markup", "markup_type": "${getMarkupType()}", "elements": [${
     entities.foldIndexed("") {
@@ -88,6 +92,7 @@ open class Text(text: String, skipSpace: Boolean = false) : MarkupText() {
         get
 
     override fun toString(): String = text
+    override fun toMarkdown(): String = text
     override fun toJson(): String = "\"$text\""
     override fun toHtml(): String = text.htmlEscape()
 
@@ -102,6 +107,7 @@ open class Text(text: String, skipSpace: Boolean = false) : MarkupText() {
 class StatisticCookie(text: String) : Text(text) {
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.STATISTIC_COOKIE
 
+    override fun toMarkdown(): String = "`${text}`"
     override fun toHtml(): String = "<code>${text.htmlEscape()}</code>"
     override fun toJson(): String = """{ "type": "markup", "markup_type": "statistic", "text": "$text"}"""
 
@@ -118,6 +124,7 @@ class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.PARAGRAPH
 
     override fun toString(): String = "${super.toString()}\n"
+    override fun toMarkdown(): String = "${super.toMarkdown()}\n"
     override fun toHtml(): String = "<p>${super.toHtml()}</p>"
 
     override fun equals(other: Any?): Boolean {
@@ -136,6 +143,13 @@ class Link(url: String, entities: List<MarkupText> = emptyList(), other: MarkupT
             return "[[$url]]"
         } else {
             return "[[$url][${super.toString()}]]"
+        }
+    }
+    override fun toMarkdown(): String {
+        if (entities.isEmpty()) {
+            return "[$url]"
+        } else {
+            return "[${super.toMarkdown()}]($url)"
         }
     }
     override fun toHtml(): String {
@@ -171,6 +185,7 @@ class Code(text: String) : Text(text, false) {
     override fun toString(): String = "=${this.text}="
     override fun toHtml(): String = "<code>${this.text.htmlEscape()}</code>"
     override fun toJson(): String = """{"type": "markup", "markup_type": "CODE", "code": ${super.toJson()}}"""
+    override fun toMarkdown(): String = "`${super.toMarkdown()}`"
 
     override fun equals(other: Any?): Boolean {
         if (other !is Code) return false
@@ -183,6 +198,7 @@ class Underline(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
 
     override fun toString(): String = "_${super.toString()}_"
     override fun toHtml(): String = "<u>${super.toHtml()}</u>"
+    override fun toMarkdown(): String = "${super.toMarkdown()}"
 
     override fun equals(other: Any?): Boolean {
         if (other !is Underline) return false
@@ -195,6 +211,7 @@ class Strikeout(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
 
     override fun toString(): String = "+${super.toString()}+"
     override fun toHtml(): String = "<s>${super.toHtml()}</s>"
+    override fun toMarkdown(): String = "~~${super.toMarkdown()}~~"
 
     override fun equals(other: Any?): Boolean {
         if (other !is Strikeout) return false
@@ -206,6 +223,7 @@ class Italic(entities: List<MarkupText> = emptyList(), other: MarkupText? = null
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.ITALIC
 
     override fun toString(): String = "/${super.toString()}/"
+    override fun toMarkdown(): String = "*${super.toMarkdown()}*"
     override fun toHtml(): String = "<i>${super.toHtml()}</i>"
 
     override fun equals(other: Any?): Boolean {
@@ -219,6 +237,7 @@ class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = nu
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.EMPHASIS
 
     override fun toString(): String = "*${super.toString()}*"
+    override fun toMarkdown(): String = "**${super.toMarkdown()}**"
     override fun toHtml(): String = "<b>${super.toHtml()}</b>"
 
     override fun equals(other: Any?): Boolean {
@@ -230,6 +249,7 @@ class Emphasis(entities: List<MarkupText> = emptyList(), other: MarkupText? = nu
 class Keyword(var key: String, var value: String) : MarkupText(listOf(), null) {
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.KEYWORD
     override fun toString(): String = "#+$key: $value"
+    override fun toMarkdown(): String = ""
     override fun toJson(): String = """{"type": "keyword", "key": "$key", "value": "$value"}"""
     override fun toHtml(): String = ""
     override fun equals(other: Any?): Boolean {
@@ -241,6 +261,8 @@ class Keyword(var key: String, var value: String) : MarkupText(listOf(), null) {
 class LineBreak() : Text("\n") {
     override fun toHtml(): String = "</br>"
     override fun toJson(): String = """{"type": "line_break"}"""
+    override fun toString(): String = """ \\\n"""
+    override fun toMarkdown(): String = """ \\\n"""
 
     override fun isEmpty(): Boolean = true
 }

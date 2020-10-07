@@ -4,18 +4,27 @@ package orgmode
 enum class LIST_CHECKBOX {
     CHECKED {
         override fun toHtml(): String = """<input type="checkbox" checked disabled>"""
+        override fun toString(): String = "[X]"
+        override fun toMarkdown(): String = "[X]"
     },
     UNCHECKED {
         override fun toHtml(): String = """<input type="checkbox" disabled>"""
+        override fun toString(): String = "[ ]"
+        override fun toMarkdown(): String = "[ ]"
     },
     PARTIAL_CHECKED {
         override fun toHtml(): String = """<input type="checkbox" disabled>"""
+        override fun toString(): String = "[-]"
+        override fun toMarkdown(): String = "[ ]"
     },
     NONE {
         override fun toHtml(): String = ""
+        override fun toString(): String = ""
+        override fun toMarkdown(): String = ""
     };
 
     abstract fun toHtml(): String
+    abstract fun toMarkdown(): String
 }
 
 class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
@@ -113,8 +122,12 @@ class ListEntry(
         }${text.toHtml()}</br>${super.toHtml()}</li>"""
     }
     override fun toString(): String {
-        return "${" ".repeat(indent)}$bullet ${text.toString()}\n" +
+        return "${" ".repeat(indent)}$bullet${if (checkbox != LIST_CHECKBOX.NONE) " " + checkbox.toString() else ""} ${text.toString()}\n" +
         entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toString()}
+    }
+    override fun toMarkdown(): String {
+        return "${" ".repeat(indent)}$bullet${if (checkbox != LIST_CHECKBOX.NONE) " " + checkbox.toMarkdown() else ""} ${text.toMarkdown()}\n" +
+        entities.fold("") {acc, e -> acc + " ".repeat(bullet.length + 1) + e.toMarkdown()}
     }
 
     override fun equals(other: Any?): Boolean {

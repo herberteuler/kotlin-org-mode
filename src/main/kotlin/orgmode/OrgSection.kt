@@ -115,9 +115,8 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
         this.properties += property
     }
 
-    override fun toString(): String {
-        return "\n${"*".repeat(level)} ${text.toString()}\n${super.toString()}"
-    }
+    override fun toString(): String = "\n${"*".repeat(level)} ${text.toString()}\n${super.toString()}"
+    override fun toMarkdown(): String = "\n${"#".repeat(level)} ${text.toMarkdown()}\n${super.toMarkdown()}"
 
     override fun toJson(): String {
         var elements: String = ""

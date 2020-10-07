@@ -41,4 +41,5 @@ code
         println(org.toJson())
     }
     File("README.html").writeText(org.toHtml())
+    File("README.md").writeText(org.toMarkdown())
 }
