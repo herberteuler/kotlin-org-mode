@@ -668,4 +668,38 @@ Text
 
         assertEquals(org, res)
     }
+    @Test fun testStatusAndScheduling() {
+
+        val org: Org = RegexOrgParser(
+            StringSource(
+                """
+* TODO Unordered List
+DEADLINE: <2020-01-16 Thue 22:00-23:30 +1d>
+- elem 1
+- elem 2
+"""
+            )
+        ).parse()
+
+        val res: Org = Document(
+            listOf(
+                Section(
+                    MarkupText(listOf(Text("Unordered List "))), 1,
+                    listOf(
+                        OrgList(
+                            listOf(
+                                ListEntry(parseMarkup("elem 1")),
+                                ListEntry(parseMarkup("elem 2"))
+                            )
+                        )
+                    ), STATE.TODO
+                ).apply { plan(Planning(PLANNING_TYPE.DEADLINE, Timestamp(true, 2020, 1, 16, "Thue", 22, 0, 23, 30, "+", 1, 'd'))) }
+            )
+        )
+
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
+
+        assertEquals(org, res)
+    }
 }
