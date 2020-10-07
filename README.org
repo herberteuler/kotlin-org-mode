@@ -1,11 +1,10 @@
 * Kotlin org mode
 
-[[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]]
-
+[[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]] \\
 Trying kotlin \\
 Tool for org-mode \\
-
-Example of converting to html [[file:README.html][here]]
+Example of converting to html [[file:README.html][here]] \\
+Example of converting to markdown [[file:README.md][here]] (Actually this file)
 
 ** Parser [3/6]
 
@@ -47,3 +46,7 @@ Works much more slower than regex phh...
 - [ ] Tables?
 
 ** TODO Tools
+*** Converts to [3/3]
+- [X] Markdown
+- [X] Html
+- [X] Json

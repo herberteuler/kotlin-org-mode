@@ -1,8 +1,10 @@
 
 # Kotlin org mode
-[https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg]
- Trying kotlin  Tool for org-mode 
- Example of converting to html [here](file:README.html)
+![Badge](https://github.com/iliayar/kotlin-org-mode/workflows/Build/badge.svg)  \
+ Trying kotlin \
+ Tool for org-mode \
+ Example of converting to html [here](README.html)  \
+ Example of converting to markdown [here](README.md) (Actually this file)
  
 ## Parser `[3/6]`
 Works much more slower than regex phh...
@@ -79,3 +81,12 @@ Works much more slower than regex phh...
 
  
 ## Tools
+
+### Converts to `[3/3]`
+
+- [X] Markdown
+
+- [X] Html
+
+- [X] Json
+

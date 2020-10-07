@@ -69,10 +69,14 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
         if (element is Text && last is Text && element.getMarkupType() == MARKUP_TYPE.TEXT &&
             last.getMarkupType() == MARKUP_TYPE.TEXT
         ) {
+            if(element is LineBreak || last is LineBreak) {
+                entities += element
+                return this
+            }
             if (last.skipSpace) {
                 last.text += element.text
             } else {
-                last.text += " " + element.text
+                entities += element
             }
             last.skipSpace = element.skipSpace
         } else {
@@ -147,8 +151,17 @@ class Link(url: String, entities: List<MarkupText> = emptyList(), other: MarkupT
     }
     override fun toMarkdown(): String {
         if (entities.isEmpty()) {
+            if(url.endsWith(".svg")) {
+                return "![Badge]($url)"
+            }
+            if(url.startsWith("file:")) {
+                return "[${url.substring(5)}]"
+            }
             return "[$url]"
         } else {
+            if(url.startsWith("file:")) {
+                return "[${super.toMarkdown()}](${url.substring(5)})"
+            }
             return "[${super.toMarkdown()}]($url)"
         }
     }
@@ -261,8 +274,8 @@ class Keyword(var key: String, var value: String) : MarkupText(listOf(), null) {
 class LineBreak() : Text("\n") {
     override fun toHtml(): String = "</br>"
     override fun toJson(): String = """{"type": "line_break"}"""
-    override fun toString(): String = """ \\\n"""
-    override fun toMarkdown(): String = """ \\\n"""
+    override fun toString(): String = "\\\\\n"
+    override fun toMarkdown(): String = "\\\n"
 
     override fun isEmpty(): Boolean = true
 }
