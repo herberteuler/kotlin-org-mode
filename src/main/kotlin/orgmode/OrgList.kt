@@ -80,10 +80,10 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
         }
     }
     override fun toString(): String {
-        return entries.fold("") { acc, e -> acc + '\n' + e.toString() } + '\n'
+        return entries.fold("") { acc, e -> acc + e.toString() }
     }
     override fun toMarkdown(): String {
-        return entries.fold("") { acc, e -> acc + '\n' + e.toMarkdown() } + '\n'
+        return entries.fold("") { acc, e -> acc + e.toMarkdown() }
     }
 
     override fun equals(other: Any?): Boolean {

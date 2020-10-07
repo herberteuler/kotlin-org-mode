@@ -127,8 +127,8 @@ class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = n
 
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.PARAGRAPH
 
-    override fun toString(): String = "${super.toString()}\n"
-    override fun toMarkdown(): String = "${super.toMarkdown()}\n"
+    override fun toString(): String = "${super.toString()}"
+    override fun toMarkdown(): String = "${super.toMarkdown()}"
     override fun toHtml(): String = "<p>${super.toHtml()}</p>"
 
     override fun equals(other: Any?): Boolean {
