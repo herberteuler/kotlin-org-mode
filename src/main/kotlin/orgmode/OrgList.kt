@@ -82,6 +82,9 @@ class OrgList(entries: List<ListEntry> = listOf()) : Org(listOf()) {
     override fun toString(): String {
         return entries.fold("") { acc, e -> acc + '\n' + e.toString() } + '\n'
     }
+    override fun toMarkdown(): String {
+        return entries.fold("") { acc, e -> acc + '\n' + e.toMarkdown() } + '\n'
+    }
 
     override fun equals(other: Any?): Boolean {
         if (other !is OrgList) return false

@@ -35,7 +35,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
     }
     open fun toHtml(): String = entities.fold("") { acc, e -> acc + e.toHtml() }
 
-    open fun toMarkdown(): String = entities.foldIndexed("") { i, acc, e -> if (i != 0) acc + ' ' + e else acc + e.toMarkdown()}
+    open fun toMarkdown(): String = entities.foldIndexed("") { i, acc, e -> if (i != 0) acc + ' ' + e.toMarkdown() else acc + e.toMarkdown()}
 }
 
 abstract class Block(var lines: List<String> = listOf()) : Org(listOf()) {

@@ -176,6 +176,9 @@ class Document(entities: List<Org> = emptyList()) : Section(Text(""), 0, entitie
     override fun toString(): String {
         return entities.fold("") { acc, e -> acc + e.toString() }
     }
+    override fun toMarkdown(): String {
+        return entities.fold("") { acc, e -> acc + e.toMarkdown() }
+    }
 
     override fun toJson(): String {
         var elements: String = ""
