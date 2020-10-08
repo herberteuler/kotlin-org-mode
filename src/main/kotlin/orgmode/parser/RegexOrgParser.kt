@@ -299,11 +299,11 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun parseNextMarkup(match: MatchResult, headId: Int, markup: MarkupText, restId: Int): List<MarkupText> {
         var res: List<MarkupText> = listOf()
 
-        if (match.groups[headId] != null && match.groups[headId]!!.value.trim() != "") {
+        if (match.groups[headId] != null && match.groups[headId]!!.value.trim(' ') != "") {
             res += parseMarkup(match.groups[headId]!!.value)
         }
         res += markup
-        if (match.groups[restId] != null && match.groups[restId]!!.value.trim() != "") {
+        if (match.groups[restId] != null && match.groups[restId]!!.value.trim(' ') != "") {
             res += parseMarkup(match.groups[restId]!!.value)
         }
         return res
@@ -342,7 +342,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         textRegex to {
             match ->
             var res: List<MarkupText> = listOf()
-            if (match.groups[1]!!.value != "") {
+            if (match.groups[1]!!.value.trim(' ') != "") {
                 res += Text(match.groups[1]!!.value)
             }
             if (match.groups[2] != null) {
