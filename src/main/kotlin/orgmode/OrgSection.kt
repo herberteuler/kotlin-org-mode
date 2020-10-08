@@ -145,10 +145,10 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
 
         var planningJson = ""
         if(!planning.isEmpty()) {
-            planningJson = "[ ${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + ", " + e.toJson() else e.toJson()}} ]"
+            planningJson = """, "planning": [ ${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + ", " + e.toJson() else e.toJson()}} ]"""
         }
 
-        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state", "planning": $planningJson, "elements": [$elements] }"""
+        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state"$planningJson, "elements": [$elements] }"""
     }
 
     override fun toHtml(): String {

@@ -56,7 +56,7 @@ abstract class Block(var lines: List<String> = listOf()) : Org(listOf()) {
 
 class CodeBlock(lines: List<String> = listOf()) : Block(lines) {
     override fun toJson(): String = """{ "type": "code_block", "lines": [${
-    lines.foldIndexed("") {i, acc, e -> acc + (if (i != 0) ", \"" else "") + e + '"'}
+    lines.foldIndexed("") {i, acc, e -> acc + (if (i != 0) ", " else "") + '"' + e + '"'}
     }]}"""
     override fun toHtml(): String = """<pre><code>${lines.fold("") {acc, e -> acc + e + "\n"}}</code></pre>"""
     override fun toString(): String = """#+BEGIN_SRC${lines.fold("") {acc, e -> acc + "\n" + e}}#+END_SRC"""

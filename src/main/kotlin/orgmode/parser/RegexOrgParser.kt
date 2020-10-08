@@ -54,6 +54,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         var indent: Int?
         var rawLine: String
 
+        // Trying parse planning properties
         rawLine = getLine()
         var planning = planningRegex.matchEntire(rawLine)
         while(planning != null) {
@@ -78,6 +79,8 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             rawLine = getLine()
             planning = planningRegex.matchEntire(rawLine)
         }
+
+        // Trying parse properties
         var propertyMatch = propertyRegex.matchEntire(rawLine)
         while(propertyMatch != null) {
             var property = Property(propertyMatch.groups[1]!!.value,
@@ -97,6 +100,8 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         indent = getIndent(rawLine)
         line = parseLine(rawLine)
 
+
+        // Parsing inner headlines
         while (skip || !src.isEof()) {
             if (!skip) {
                 rawLine = getLine()
@@ -227,7 +232,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                     list.add(entry)
                     return Pair(line, indent)
                 } else {
-                    paragraph.add(line)
+                    if(!line.isEmpty()) paragraph.add(line)
                 }
             } else if(line is Block) {
                 if (!paragraph.isEmpty()) entry.add(paragraph)
@@ -294,11 +299,11 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
     fun parseNextMarkup(match: MatchResult, headId: Int, markup: MarkupText, restId: Int): List<MarkupText> {
         var res: List<MarkupText> = listOf()
 
-        if (match.groups[headId] != null && match.groups[headId]!!.value != "") {
+        if (match.groups[headId] != null && match.groups[headId]!!.value.trim() != "") {
             res += parseMarkup(match.groups[headId]!!.value)
         }
         res += markup
-        if (match.groups[restId] != null && match.groups[restId]!!.value != "") {
+        if (match.groups[restId] != null && match.groups[restId]!!.value.trim() != "") {
             res += parseMarkup(match.groups[restId]!!.value)
         }
         return res
