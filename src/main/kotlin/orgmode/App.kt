@@ -6,12 +6,24 @@ package orgmode
 import java.io.File
 import orgmode.parser.*
 
+var timer: Long = System.nanoTime()
+
+fun tic() {
+    timer = System.nanoTime()
+}
+
+fun toc(msg: String) {
+    println("$msg in ${(System.nanoTime() - timer) / 1000000} ms")
+}
+
 fun main(args: Array<String>) {
 
     var org: Org
 
     if (args.size > 0) {
+        tic()
         org = RegexOrgParser(FileSource(args[0])).parse()
+        toc("File parsed")
     } else {
 
         org = RegexOrgParser(
@@ -40,8 +52,15 @@ code
         println(org.toString())
         println(org.toJson())
     }
+    if(args.size == 2) {
+        tic()
+        File(args[1]).writeText(org.toHtml())
+        toc("Html generated")
+    }
+    if(args.size == 1) {
+        File("README.html").writeText(org.toHtml())
+        File("README.md").writeText(org.toMarkdown())
+    }
     // println(org.toString())
-    println(org.toJson())
-    File("README.html").writeText(org.toHtml())
-    File("README.md").writeText(org.toMarkdown())
+    // println(org.toJson())
 }

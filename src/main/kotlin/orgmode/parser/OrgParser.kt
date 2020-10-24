@@ -171,30 +171,30 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
         return root
     }
 
-    var raw_markup: String = ""
+    var raw_markup: StringBuilder = StringBuilder()
 
     fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack(), prefix: String = ""): MarkupText {
 
-        var word: String = prefix
+        var word: StringBuilder = StringBuilder(prefix)
 
         var beginOfLine: Boolean = true
 
         while (!src.isEof() && src.getChar() != '\n') {
             if (test('\\')) {
-                raw_markup += '\\'
+                raw_markup.append('\\')
                 if (test('\\')) {
-                    raw_markup += '\\'
+                    raw_markup.append('\\')
                     if (test('\n')) {
-                        if (!word.isEmpty()) root.add(Text(word))
+                        if (!word.isEmpty()) root.add(Text(word.toString()))
                         root.add(LineBreak())
                         stack.clear() // FIXME pop?
                         return root
                     } else {
-                        word += '\\'
+                        word.append('\\')
                     }
                 } else {
-                    raw_markup += src.getChar()
-                    word += src.getChar()
+                    raw_markup.append(src.getChar())
+                    word.append(src.getChar())
                     src.nextChar()
                 }
                 continue
@@ -202,7 +202,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
 
             if (test('[')) {
                 if (test('[')) {
-                    raw_markup = ""
+                    raw_markup = StringBuilder()
                     var id: Int = stack.push(']')
                     var content: MarkupText = parseMarkup(stack = stack)
                     if (stack.top().second != id) {
@@ -212,9 +212,9 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                         stack.pop()
                         test(']')
                         if (test(']')) {
-                            root.add(Link(raw_markup))
+                            root.add(Link(raw_markup.toString()))
                         } else if (test('[')) {
-                            var url: String = raw_markup
+                            var url: String = raw_markup.toString()
                             id = stack.push(']')
                             var link_text: MarkupText = parseMarkup(stack = stack)
                             if (stack.top().second != id) {
@@ -242,58 +242,57 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                         }
                     }
                 } else {
-                    root.add(Text(word + '[', skipSpace = src.getChar() != ' '))
+                    word.append('[')
+                    root.add(Text(word.toString(), skipSpace = src.getChar() != ' '))
                 }
                 continue
             }
 
             if (src.getChar() == ']') {
                 if (stack.popUntil(']')) {
-                    if (!word.isEmpty()) root.add(Text(word, skipSpace = true))
+                    if (!word.isEmpty()) root.add(Text(word.toString(), skipSpace = true))
                     return root
                 } else {
                     test(']')
-                    raw_markup += ']'
-                    word += ']'
+                    raw_markup.append(']')
+                    word.append(']')
                 }
                 continue
             }
 
             if (beginOfLine || test(' ')) {
-                if (!beginOfLine) raw_markup += ' '
-                beginOfLine = false
-                if (!word.isEmpty()) root.add(Text(word))
-                word = ""
+                if (!beginOfLine) raw_markup.append(' ')
+                if (!word.isEmpty()) root.add(Text(word.toString()))
+                word = StringBuilder()
 
                 var symbol: Char? = null
 
                 for (s in markup_symbols) {
                     if (test(s)) {
-                        raw_markup += s
+                        raw_markup.append(s)
                         symbol = s
                         break
                     }
                 }
 
                 if (symbol != null) {
-                    if (!test(' ')) {
+                    if (src.getChar() != ' ') {
                         val id: Int = stack.push(symbol)
-                        if (symbol == '=') raw_markup = ""
+                        if (symbol == '=') raw_markup = StringBuilder()
                         var content: MarkupText = parseMarkup(stack = stack)
                         if (stack.top().second != id) {
                             root.add(Text(symbol.toString(), skipSpace = true))
-                            // return root
                         } else {
                             stack.pop()
                         }
-                        // if(content.getMarkupType() == MARKUP_TYPE.CODE) root.entities = listOf()
                         root.add(content)
                     } else {
-                        raw_markup += ' '
                         root.add(Text(symbol.toString()))
                     }
                 }
+                beginOfLine = false
             } else {
+                // word.append(' ')
                 var symbol: Char? = null
 
                 for (s in markup_symbols) {
@@ -307,29 +306,28 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
                     if (src.getChar() == ' ' || src.getChar() == '\n' || src.isEof() || src.getChar() in markup_symbols) {
                         if (stack.popUntil(symbol)) {
                             if (symbol == '=') {
-                                return Code(raw_markup)
+                                return Code(raw_markup.toString())
                             }
-                            if (!word.isEmpty()) root.add(Text(word, skipSpace = src.getChar() in markup_symbols))
-                            raw_markup += symbol
+                            if (!word.isEmpty()) root.add(Text(word.toString(), skipSpace = src.getChar() in markup_symbols))
+                            raw_markup.append(symbol)
                             return getMarkup(symbol, root)
                         } else {
-                            root.add(Text(word + symbol, skipSpace = true))
-                            word = ""
+                            word.append(symbol)
                         }
-                        raw_markup += symbol
+                        raw_markup.append(symbol)
                     } else {
-                        raw_markup += symbol
-                        word += symbol
+                        raw_markup.append(symbol)
+                        word.append(symbol)
                     }
                 } else {
-                    raw_markup += src.getChar()
-                    word += src.getChar()
+                    raw_markup.append(src.getChar())
+                    word.append(src.getChar())
                     src.nextChar()
                 }
             }
         }
-        if (!word.isEmpty()) root.add(Text(word))
-        stack.pop() // FIXME pop?
+        if (!word.isEmpty()) root.add(Text(word.toString()))
+        stack.pop()
 
         return root
     }
