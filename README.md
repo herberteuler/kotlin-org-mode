@@ -21,7 +21,7 @@ Works much more slower than regex phh...
 - [ ] Code blocks
 - [ ] Parameters
 
-## Regex Parser `[6/6]`
+## Regex Parser `[7/7]`
 [Org syntax](https://orgmode.org/worg/dev/org-syntax.html)
 - [X] Sections
     - [X] Simple sections
@@ -41,7 +41,7 @@ Works much more slower than regex phh...
 - [X] Dates
 - [X] Code blocks
 - [X] Parameters
-- [ ] Tables?
+- [X] Tables
 
 ## Tools
 

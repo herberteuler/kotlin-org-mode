@@ -1,10 +1,11 @@
-
-
 package orgmode.parser
 
 import orgmode.*
 
 class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
+
+    val tableRegex:        Regex = """^(\s*)\|((.*)\|)+""".toRegex()
+    val tableSplitRegex:   Regex = """^(\s*)\|(\-\+)+\-+\|""".toRegex()
 
     val linkRegex:         Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
     val emphasisRegex:     Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
@@ -25,7 +26,6 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     val activeTimestampRegex:   Regex = """<(\d{4})-(\d{2})-(\d{2}) ([^\+>\]\-\n0-9]+)( ((\d{1,2}):(\d{2}))(-((\d{1,2}):(\d{2})))?)?( (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])){0,2}>(.*)""".toRegex()
     val inactiveTimestampRegex: Regex = """\[(\d{4})-(\d{2})-(\d{2}) ([^\+>\]\-\n0-9]+)( ((\d{1,2}):(\d{2}))(-((\d{1,2}):(\d{2})))?)?( (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])){0,2}\](.*)""".toRegex()
-
 
     var buffer: String? = null
 
@@ -113,7 +113,13 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             indent ?: throw ParserException("Wrong skip")
             line ?: throw ParserException("Wrong skip")
 
-            if (line is MarkupText) {
+            if(line is OrgTableLine) {
+                if(paragraph !is OrgTable) {
+                    if (!paragraph.isEmpty()) section.add(paragraph)
+                    paragraph = OrgTable(emptyList())
+                }
+                paragraph.add(line)
+            } else if (line is MarkupText) {
                 if (!line.isEmpty()) {
                     paragraph.add(line)
                 } else if (!paragraph.isEmpty()) {
@@ -194,6 +200,19 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
                 if (!paragraph.isEmpty()) entry.add(paragraph)
                 list.add(entry)
                 return Pair(line, 0)
+            } else if(line is OrgTableLine) {
+                emptyLines = 0
+                if (indent <= curIndent) {
+                    if (!paragraph.isEmpty()) entry.add(paragraph)
+                    list.add(entry)
+                    return Pair(line, indent)
+                } else {
+                    if(paragraph !is OrgTable) {
+                        if (!paragraph.isEmpty()) entry.add(paragraph)
+                        paragraph = OrgTable(emptyList())
+                    }
+                    paragraph.add(line)
+                }
             } else if (line is ListEntry) {
                 if (!paragraph.isEmpty()) entry.add(paragraph)
                 paragraph = Paragraph()
@@ -291,6 +310,20 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
             if(match.groups[2]!!.value == "SRC") {
                 return CodeBlock();
             }
+        }
+        match = tableSplitRegex.matchEntire(line)
+        if(match != null) {
+            return OrgTableSplit()
+        }
+        match = tableRegex.matchEntire(line)
+        if(match != null) {
+            var cols: List<String> = match.groups[0]!!.value.split("|")
+            cols = cols.subList(1, cols.size - 1)
+            var tableLine: OrgTableLine = OrgTableLine(emptyList())
+            for(col: String in cols) {
+                tableLine.add(MarkupText(parseMarkup(col)))
+            }
+            return tableLine;
         }
 
         return MarkupText(parseMarkup(line))

@@ -1,4 +1,3 @@
-
 package orgmode
 
 class ParserException(msg: String) : Exception(msg) {

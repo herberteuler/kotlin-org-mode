@@ -1,4 +1,3 @@
-
 package orgmode.parser
 
 import orgmode.*

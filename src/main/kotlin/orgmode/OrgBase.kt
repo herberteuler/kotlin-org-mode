@@ -1,4 +1,3 @@
-
 package orgmode
 
 val HTML_SPECIAL = mapOf(
@@ -35,7 +34,7 @@ abstract class Org(entities: List<Org> = emptyList()) {
     }
     open fun toHtml(): String = entities.fold("") { acc, e -> acc + e.toHtml() }
 
-    open fun toMarkdown(): String = entities.foldIndexed("") { i, acc, e -> acc + e.toMarkdown()}
+    open fun toMarkdown(): String = entities.fold("") { acc, e -> acc + e.toMarkdown()}
 }
 
 abstract class Block(var lines: List<String> = listOf()) : Org(listOf()) {

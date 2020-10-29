@@ -1,4 +1,3 @@
-
 package orgmode
 
 enum class LIST_CHECKBOX {

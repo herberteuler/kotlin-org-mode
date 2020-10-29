@@ -1,4 +1,3 @@
-
 package orgmode
 
 interface Parser<T> {

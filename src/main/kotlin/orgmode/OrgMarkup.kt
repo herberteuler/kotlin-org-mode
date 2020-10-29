@@ -45,6 +45,9 @@ open class MarkupText(entities: List<MarkupText> = emptyList(), other: MarkupTex
         return super.equals(other)
     }
 
+
+    // :FIXME: These functions are quite bad
+    //         It's for minimizing nesting
     open fun add(element: Text): MarkupText = add(element as Org)
 
     open fun add(other: MarkupText): MarkupText {
@@ -119,7 +122,7 @@ class StatisticCookie(text: String) : Text(text) {
     override fun isEmpty(): Boolean = text.isEmpty()
 }
 
-class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = null) : MarkupText(entities, other) {
+open class Paragraph(entities: List<MarkupText> = emptyList(), other: MarkupText? = null) : MarkupText(entities, other) {
 
     override fun getMarkupType(): MARKUP_TYPE = MARKUP_TYPE.PARAGRAPH
 
