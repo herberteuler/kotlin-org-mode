@@ -18,6 +18,13 @@ class OrgTable(var lines: List<OrgTableLine>) : Paragraph(emptyList()) {
     fun add(line: OrgTableLine) {
         lines += line
     }
+
+    override fun equals(other: Any?): Boolean {
+        if(other == null) return false
+        if(other !is OrgTable) return false
+        if(lines != other.lines) return false
+        return true
+    }
 }
 
 open class OrgTableLine(var cols: List<MarkupText>) : MarkupText(emptyList()) {
@@ -36,6 +43,13 @@ open class OrgTableLine(var cols: List<MarkupText>) : MarkupText(emptyList()) {
 
     override fun add(element: Org): MarkupText = throw OrgException("Cannot add Org element to Table line")
     override fun isEmpty(): Boolean = false
+
+    override fun equals(other: Any?): Boolean {
+        if(other == null) return false
+        if(other !is OrgTableLine) return false
+        if(cols != other.cols) return false
+        return true
+    }
 }
 
 class OrgTableSplit(val width: Int): OrgTableLine(emptyList()) {
@@ -44,4 +58,11 @@ class OrgTableSplit(val width: Int): OrgTableLine(emptyList()) {
     override fun toString(): String = "|-" + (2..width).fold("") {acc, _ -> "+-" + acc} + "|"
 
     override fun isEmpty(): Boolean = true
+
+    override fun equals(other: Any?): Boolean {
+        if(other == null) return false
+        if(other !is OrgTableSplit) return false
+        if(width != other.width) return false
+        return true
+    }
 }
