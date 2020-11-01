@@ -313,7 +313,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         }
         match = tableSplitRegex.matchEntire(line)
         if(match != null) {
-            return OrgTableSplit()
+            return OrgTableSplit(match.groups[0]!!.value.split("+").size)
         }
         match = tableRegex.matchEntire(line)
         if(match != null) {

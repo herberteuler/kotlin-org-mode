@@ -7,7 +7,7 @@ import orgmode.parser.*
 
 class RegexOrgParserTest {
 
-    val DEBUG: Boolean = false
+    val DEBUG: Boolean = true
 
     @Suppress("UNCHECKED_CAST")
     fun parseMarkup(s: String): MarkupText {
