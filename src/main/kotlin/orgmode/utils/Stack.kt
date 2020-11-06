@@ -37,11 +37,15 @@ open class Stack<T>() {
 
 class MarkupStack(markup_symbols: List<Char>) : Stack<Pair<Char, Int>>() {
     var cnt: Int = 0
-    val count_of: Map<Char, Int> = markup_symbols.map { s -> s to 0 }.toMap()
+    val count_of: MutableMap<Char, Int> = markup_symbols.map { s -> s to 0 }.toMap().toMutableMap()
+    // val has_id: MutableMap<Int, Boolean> = mutableMapOf()
 
     override fun pop(): Pair<Char, Int> {
         if(isEmpty()) return Pair('\u0000', -1)
-        return super.pop()
+        var res = super.pop()
+        count_of[res.first] = count_of[res.first]!! - 1
+        // has_id.remove(res.second)
+        return res
     }
     override fun top(): Pair<Char, Int> {
         if(isEmpty()) return Pair('\u0000', -1)
@@ -51,15 +55,12 @@ class MarkupStack(markup_symbols: List<Char>) : Stack<Pair<Char, Int>>() {
     fun push(c: Char): Int {
         cnt++
         push(Pair(c, cnt - 1))
+        count_of[c] = count_of[c]!! + 1;
+        // has_id[cnt - 1] = true;
         return cnt - 1
     }
     fun has(c: Char): Boolean {
-        var i: StackElement<Pair<Char, Int>>? = root
-        while(i != null) {
-            if(i.value.first == c) return true
-            i = i.prev
-        }
-        return false
+        return count_of[c]!! > 0
     }
     fun has(id: Int): Boolean {
         var i: StackElement<Pair<Char, Int>>? = root
@@ -68,6 +69,7 @@ class MarkupStack(markup_symbols: List<Char>) : Stack<Pair<Char, Int>>() {
             i = i.prev
         }
         return false
+        // return has_id[cnt - 1] != null && has_id[cnt - 1]!!
     }
 
     fun popUntil(c: Char): Boolean {
