@@ -702,4 +702,50 @@ DEADLINE: <2020-01-16 Thue 22:00-23:30 +1d>
 
         assertEquals(org, res)
     }
+
+    @Test fun testTables() {
+
+        val org: Org = RegexOrgParser(
+            StringSource(
+                """
+* Table
+|  test |   *bold* |
+|-------+----------|
+| value | /italic/ |
+
+
+| not | table
+"""
+            )
+        ).parse()
+
+        val res: Org = Document(
+            listOf(
+                Section(
+                    MarkupText(listOf(Text("Table"))), 1,
+                    listOf(
+                        OrgTable(listOf(
+                                     OrgTableLine(listOf(
+                                                      parseMarkup("test"),
+                                                      parseMarkup("*bold*")
+                                     )),
+                                     OrgTableSplit(2),
+                                     OrgTableLine(listOf(
+                                                      parseMarkup("value"),
+                                                      parseMarkup("/italic/")
+                                     ))
+                        )),
+                        Paragraph(listOf(
+                                      parseMarkup("| not | table")
+                        ))
+                    )
+                )
+            )
+        )
+
+        if(DEBUG) println(org.toJson())
+        if(DEBUG) println(res.toJson())
+
+        assertEquals(org, res)
+    }
 }

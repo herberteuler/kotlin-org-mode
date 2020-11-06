@@ -5,7 +5,7 @@ import orgmode.*
 class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
 
     val tableRegex:        Regex = """^(\s*)\|((.*)\|)+""".toRegex()
-    val tableSplitRegex:   Regex = """^(\s*)\|(\-\+)+\-+\|""".toRegex()
+    val tableSplitRegex:   Regex = """^(\s*)\|(\-+\+)+\-+\|""".toRegex()
 
     val linkRegex:         Regex = """(.*)(\[\[([^\]]+)\](\[(.*)\])?\])(.*(\n)?)""".toRegex()
     val emphasisRegex:     Regex = """(.*)(^|\s)(\*([^ ].+[^ ]|[^ ])\*)(\s|$)(.*(\n)?)""".toRegex()
@@ -313,7 +313,7 @@ class RegexOrgParser(src: Source) : AbstractParser<Org>(src) {
         }
         match = tableSplitRegex.matchEntire(line)
         if(match != null) {
-            return OrgTableSplit()
+            return OrgTableSplit(match.groups[0]!!.value.split("+").size)
         }
         match = tableRegex.matchEntire(line)
         if(match != null) {
