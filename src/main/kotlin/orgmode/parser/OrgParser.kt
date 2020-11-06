@@ -1,8 +1,12 @@
 package orgmode.parser
 
 import orgmode.*
+import orgmode.utils.*
 
 class OrgParser(src: Source) : AbstractParser<Org>(src) {
+
+    var markup_symbols: List<Char> = listOf('*', '/', '+', '=', '_', ']')
+    var raw_markup: StringBuilder = StringBuilder()
 
     override fun parse(): Org {
         var root: Section = Document()
@@ -80,65 +84,6 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
         return parseMarkup().also { test('\n') }
     }
 
-    class MarkupStack(list: MutableList<Char> = mutableListOf()) {
-
-        var list: MutableList<Pair<Char, Int>> = mutableListOf()
-        var cnt: Int = 0
-
-        init {
-            for (c in list) {
-                push(c)
-            }
-        }
-
-        fun pop() {
-            if (list.isEmpty()) return
-            list.removeAt(list.size - 1)
-        }
-        fun push(c: Char): Int {
-            list.add(list.size, Pair(c, cnt))
-            cnt++
-            return cnt - 1
-        }
-        fun has(c: Char): Boolean {
-            return list.any { it.first == c }
-        }
-        fun has(id: Int): Boolean {
-            return list.any { it.second == id }
-        }
-        fun top(): Pair<Char, Int> {
-            return if (list.size > 0) list[list.size - 1] else Pair('\u0000', -1)
-        }
-
-        fun popUntil(c: Char): Boolean {
-            if (has(c)) {
-                while (list[list.size - 1].first != c) {
-                    pop()
-                }
-                return true
-            } else {
-                return false
-            }
-        }
-
-        fun popUntil(id: Int): Boolean {
-            if (has(id)) {
-                while (list[list.size - 1].second != id) {
-                    pop()
-                }
-                return true
-            } else {
-                return false
-            }
-        }
-
-        fun clear() {
-            while (list.size > 0) pop()
-        }
-    }
-
-    var markup_symbols: List<Char> = listOf('*', '/', '+', '=', '_', ']')
-
     fun getMarkup(symbol: Char, text: MarkupText): MarkupText {
         return when (symbol) {
             '*' -> ::Emphasis
@@ -150,7 +95,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
     }
 
     fun parseMarkupWithSymbol(symbol: Char, prefix: String = ""): MarkupText {
-        var stack: MarkupStack = MarkupStack()
+        var stack: MarkupStack = MarkupStack(markup_symbols)
         var root: MarkupText = MarkupText()
 
         val id: Int = stack.push(symbol)
@@ -170,9 +115,7 @@ class OrgParser(src: Source) : AbstractParser<Org>(src) {
         return root
     }
 
-    var raw_markup: StringBuilder = StringBuilder()
-
-    fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack(), prefix: String = ""): MarkupText {
+    fun parseMarkup(root: MarkupText = MarkupText(), stack: MarkupStack = MarkupStack(markup_symbols), prefix: String = ""): MarkupText {
 
         var word: StringBuilder = StringBuilder(prefix)
 
