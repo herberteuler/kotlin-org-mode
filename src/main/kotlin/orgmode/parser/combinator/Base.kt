@@ -19,6 +19,23 @@ open class LeftParser<T, E>(val left: Parser<T>, val right: Parser<E>) : Parser<
     }
 }
 
+class NoneParser<T>(val res: T) : Parser<T> {
+    override fun parse(s: String): Pair<String, T> {
+        return Pair(s, res)
+    }
+}
+
+
+class MaybeParser<T>(val p: Parser<T>): Parser<T?> {
+    override fun parse(s: String): Pair<String, T?> {
+        try {
+            return p.parse(s);
+        } catch(e: ParserError) {
+            return Pair(s, null)
+        }
+    }
+}
+
 open class RightParser<T, E>(val left: Parser<T>, val right: Parser<E>) : Parser<E> {
     override fun parse(s: String): Pair<String, E> {
         var (rest, _) = left.parse(s)
@@ -130,10 +147,9 @@ class SeparatedBy1Parser<T, E>(val p: Parser<T>, val sep: Parser<E>) : Parser<Li
     }
 }
 
-class WhitespaceParser : Parser<String> {
-    override fun parse(s: String): Pair<String, String> {
-        val (rest, spaces) = ManyParser(SatisfyParser("whitespace", {c -> c in " \t\r"})).parse(s)
-        return Pair(rest, spaces.joinToString(""))
+class WhitespaceParser : Parser<Char> {
+    override fun parse(s: String): Pair<String, Char> {
+        return SatisfyParser("whitespace", {c -> c in " \t\r"}).parse(s)
     }
 }
 
@@ -148,7 +164,9 @@ data class Asterisk(val value: String)
 
 class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
 
-    val ws: Parser<String> = WhitespaceParser()
+    val singleWs: Parser<Char> = WhitespaceParser()
+    val ws: Parser<String> = MapParser(ManyParser(singleWs), { l -> l.joinToString("") })
+    val alphaNum: Parser<Char> = SatisfyParser("alpha numeric") { c -> c.isLetterOrDigit() }
 
     override fun parse(s: String): Pair<String, T> {
         return builder(this).parse(s)
@@ -156,14 +174,17 @@ class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
     fun str(pred: (Char) -> Boolean): Parser<String> {
         return MapParser(Many1Parser(SatisfyParser("chars", pred)), { l -> l.joinToString("") })
     }
+    fun str(p: Parser<Char>): Parser<String> {
+        return MapParser(Many1Parser(p), { l -> l.joinToString("") })
+    }
     fun char(c: Char): Parser<Char> {
-        return SatisfyParser("'${c}'") { cs -> cs == c }
+        return SatisfyParser("'$c'") { cs -> cs == c }
     }
 
     fun exact(s: String): Parser<String> {
         var p: Parser<String>? = null
         return CombParser<String> {
-            for(c: Char in s) {
+            for (c: Char in s) {
                 if (p == null) {
                     p = char(c) * { c -> "" + c }
                 } else {
@@ -174,28 +195,39 @@ class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
         }
     }
 
-    operator fun<E> Parser<E>.unaryPlus(): Parser<List<E>> {
+    fun <E> just(res: E): Parser<E> {
+        return NoneParser(res)
+    }
+
+    fun <E> choice(vararg ps: Parser<E>): Parser<E> {
+        return ChoiceParser(ps.asList())
+    }
+
+    operator fun <E> Parser<E>.unaryPlus(): Parser<List<E>> {
         return Many1Parser(this)
     }
-    operator fun<E> Parser<E>.unaryMinus(): Parser<List<E>> {
+    operator fun <E> Parser<E>.unaryMinus(): Parser<List<E>> {
         return ManyParser(this)
     }
-    operator fun<L, R> Parser<L>.plus(p: Parser<R>): Parser<L> {
+    operator fun <L, R> Parser<L>.plus(p: Parser<R>): Parser<L> {
         return LeftParser(this, p)
     }
-    operator fun<L, R> Parser<L>.minus(p: Parser<R>): Parser<R> {
+    operator fun <L, R> Parser<L>.minus(p: Parser<R>): Parser<R> {
         return RightParser(this, p)
     }
-    operator fun<L, R> Parser<L>.div(p: Parser<R>): Parser<List<L>> {
-	    return SeparatedBy1Parser(this, p)
+    operator fun <L, R> Parser<L>.div(p: Parser<R>): Parser<List<L>> {
+        return SeparatedBy1Parser(this, p)
     }
-    operator fun<L, R> Parser<L>.rem(p: Parser<R>): Parser<List<L>> {
-	    return SeparatedByParser(this, p)
+    operator fun <L, R> Parser<L>.rem(p: Parser<R>): Parser<List<L>> {
+        return SeparatedByParser(this, p)
     }
-    operator fun<E, R> Parser<E>.times(f: (E) -> R): Parser<R> {
-	    return MapParser(this, f)
+    operator fun <E, R> Parser<E>.times(f: (E) -> R): Parser<R> {
+        return MapParser(this, f)
     }
-    operator fun<E, R> Parser<E>.invoke(f: (E) -> Parser<R>): Parser<R> {
-	    return BindParser(this, f)
+    operator fun <E, R> Parser<E>.invoke(f: (E) -> Parser<R>): Parser<R> {
+        return BindParser(this, f)
+    }
+    operator fun <E> Parser<E>.not(): Parser<E?> {
+        return MaybeParser(this)
     }
 }

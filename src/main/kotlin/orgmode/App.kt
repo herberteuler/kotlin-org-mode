@@ -2,6 +2,7 @@ package orgmode
 
 import java.io.File
 import orgmode.parser.*
+import orgmode.parser.combinator.CombOrgParser
 
 var timer: Long = System.nanoTime()
 
@@ -23,21 +24,28 @@ fun main(args: Array<String>) {
         toc("File parsed")
     } else {
 
-        org = RegexOrgParser(
-            StringSource(
-                """
-| test | test |
-|1 | 2|
-|-+-|
-|ggag|haha|
-
-1. Test
-2. Table
-   | +test+ | _Test_|
-   | 123 | =353= |
-"""
-            )
+        org = CombOrgParser(
+            StringSource("*** TODO [#G] Test dasd ads  :gag:")
         ).parse()
+//         org = RegexOrgParser(
+//             StringSource(
+//                 """
+// | test | test |
+// |1 | 2|
+// |-+-|
+// |ggag|haha|
+
+// 1. Test
+// 2. Table
+//    | +test+ | _Test_|
+//    | 123 | =353= |
+// """
+//             )
+//         ).parse()
+
+
+
+
     }
 
     if(args.size == 0) {

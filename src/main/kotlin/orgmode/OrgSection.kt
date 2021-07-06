@@ -48,6 +48,10 @@ class Planning(var type: PLANNING_TYPE, var timestamp: Timestamp) {
 
 class Property(var name: String, var plus: Boolean, var value: String?)
 
+class Priority(var letter: Char)
+
+class Tag(var tags: List<String>)
+
 class Timestamp(var active: Boolean,
                 var year: Int,
                 var month: Int,
@@ -116,7 +120,7 @@ class Timestamp(var active: Boolean,
 
 }
 
-open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList(), var state: STATE = STATE.NONE) : Org(entities) {
+open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList(), var state: STATE = STATE.NONE, var priority: Priority? = null, var tag: Tag? = null) : Org(entities) {
 
     var level: Int = level
     var text: MarkupText = text
@@ -147,7 +151,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
             planningJson = """, "planning": [ ${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + ", " + e.toJson() else e.toJson()}} ]"""
         }
 
-        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state"$planningJson, "elements": [$elements] }"""
+        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state"$planningJson, "elements": [$elements], ${if(priority != null) "\"priority\": \"${priority!!.letter}\"" else ""} }"""
     }
 
     override fun toHtml(): String {
