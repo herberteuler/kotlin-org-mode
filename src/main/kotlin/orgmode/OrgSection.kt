@@ -151,7 +151,7 @@ open class Section(text: MarkupText, level: Int, entities: List<Org> = emptyList
             planningJson = """, "planning": [ ${planning.foldIndexed("") {i, acc, e -> if(i != 0) acc + ", " + e.toJson() else e.toJson()}} ]"""
         }
 
-        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state"$planningJson, "elements": [$elements], ${if(priority != null) "\"priority\": \"${priority!!.letter}\"" else ""} }"""
+        return """{ "type": "section", "header": ${text.toJson()}, "level": $level, "state": "$state"$planningJson, "elements": [$elements]${if(priority != null) ", \"priority\": \"${priority!!.letter}\"" else ""}${if(tag != null) ", \"tag\": [ ${tag!!.tags.joinToString(", ") { s -> "\"$s\""}} ]" else ""} }"""
     }
 
     override fun toHtml(): String {

@@ -1,5 +1,7 @@
 package orgmode.parser.combinator
 
+import kotlin.reflect.KProperty
+
 class ParserError(public val exp: String, public val was: String, public var rest: String) : Exception("Expected: ${exp}, was: ${was}. The rest: \"${rest}\"") { }
 
 interface Parser<T> {
@@ -160,7 +162,17 @@ class BindParser<T, E>(val p: Parser<T>, val f: (T) -> Parser<E>): Parser<E> {
     }
 }
 
-data class Asterisk(val value: String)
+class MatchParser<T>(val p: Parser<T>): Parser<Boolean> {
+    override fun parse(s: String): Pair<String, Boolean> {
+        try {
+            p.parse(s)
+            return Pair(s, true)
+        } catch(e: ParserError) {
+            return Pair(s, false)
+        }
+    }
+}
+
 
 class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
 
@@ -198,6 +210,9 @@ class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
     fun <E> just(res: E): Parser<E> {
         return NoneParser(res)
     }
+    fun <E> ret(res: E): Parser<E> {
+        return just(res)
+    }
 
     fun <E> choice(vararg ps: Parser<E>): Parser<E> {
         return ChoiceParser(ps.asList())
@@ -227,7 +242,17 @@ class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
     operator fun <E, R> Parser<E>.invoke(f: (E) -> Parser<R>): Parser<R> {
         return BindParser(this, f)
     }
+    infix fun <E, R> Parser<E>.bind(f: (E) -> Parser<R>): Parser<R> {
+        return this(f)
+    }
     operator fun <E> Parser<E>.not(): Parser<E?> {
         return MaybeParser(this)
+    }
+
+    infix fun <L, R> Parser<L>.l(p: Parser<R>): Parser<L> {
+        return LeftParser(this, p)
+    }
+    infix fun <L, R> Parser<L>.r(p: Parser<R>): Parser<R> {
+        return RightParser(this, p)
     }
 }
