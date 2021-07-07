@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
     } else {
 
         org = CombOrgParser(
-            StringSource("*** TODO Test dasd ads :ta:tu:te ")
+            StringSource("*** FIXM Test dasd ads :ta:tu:te: sda :sadas: ")
         ).parse()
 //         org = RegexOrgParser(
 //             StringSource(

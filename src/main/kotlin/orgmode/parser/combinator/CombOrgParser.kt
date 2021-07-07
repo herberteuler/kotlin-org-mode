@@ -38,30 +38,39 @@ class CombOrgParser(src: Source) : orgmode.parser.Parser<Org> {
         (char(':') r (str(choice(alphaNum, char('_'), char('@'), char('#'), char('%'))) % char(':')) l char(':')) * { l -> Tag(l) }
     }
 
+    fun sectionTextParser(level: Int, state: STATE, priority: Priority?, prefix: String = ""): Parser<Section> {
+         return CombParser {
+             str { c -> c !in "\n:" } bind {
+                 text ->
+                     choice(
+                         eofOrNl * {
+                             Section(Text(prefix + text), level).also {
+                                 it.state = state
+                                 it.priority = priority
+                             }
+                         },
+                         !(tagParser l ws l eofOrNl) bind {
+                             tag ->
+                                 if(tag != null) {
+                                     just(Section(Text(prefix + text), level).also {
+                                              it.state = state
+                                              it.priority = priority
+                                              it.tag = tag
+                                     })
+                                 } else {
+                                     char(':') bind { _ -> sectionTextParser(level, state, priority, prefix + text + ":") }
+                                 }
+                         }
+                     )
+             }
+         }
+    }
+
     val headlineParser: Parser<Section> = CombParser {
         starsParser bind {
             level -> (ws r keywordParser) bind {
                 state -> (ws r !priorityParser) bind {
-                    priority -> (str(choice(alphaNum, singleWs))) bind {
-                        text -> (!char('\n')) {
-                            newLine ->
-                                if (newLine == null) {
-                                    (!tagParser) {
-                                        tag ->
-                                            just(Section(Text(text), level).also {
-                                                     it.state = state
-                                                     it.priority = priority
-                                                     it.tag = tag
-                                            }) l (ws r !char('\n'))
-                                    }
-                                } else {
-                                    just(Section(Text(text), level).also {
-                                             it.state = state
-                                             it.priority = priority
-                                    })
-                                }
-                        }
-                    }
+                    priority -> sectionTextParser(level, state, priority)
                 }
             }
         }

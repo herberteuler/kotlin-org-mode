@@ -162,23 +162,20 @@ class BindParser<T, E>(val p: Parser<T>, val f: (T) -> Parser<E>): Parser<E> {
     }
 }
 
-class MatchParser<T>(val p: Parser<T>): Parser<Boolean> {
-    override fun parse(s: String): Pair<String, Boolean> {
-        try {
-            p.parse(s)
-            return Pair(s, true)
-        } catch(e: ParserError) {
-            return Pair(s, false)
-        }
+class MatchParser<T>(val p: Parser<T>) : Parser<Unit> {
+    override fun parse(s: String): Pair<String, Unit> {
+        p.parse(s)
+        return Pair(s, Unit)
     }
 }
-
 
 class CombParser<T>(val builder: CombParser<T>.() -> Parser<T>) : Parser<T> {
 
     val singleWs: Parser<Char> = WhitespaceParser()
     val ws: Parser<String> = MapParser(ManyParser(singleWs), { l -> l.joinToString("") })
     val alphaNum: Parser<Char> = SatisfyParser("alpha numeric") { c -> c.isLetterOrDigit() }
+    val eof: Parser<Unit> = EofParser()
+    val eofOrNl: Parser<Char> = ChoiceParser(listOf(SatisfyParser("new line") { c -> c == '\n' }, MapParser(eof) { _ -> '\n' }))
 
     override fun parse(s: String): Pair<String, T> {
         return builder(this).parse(s)
